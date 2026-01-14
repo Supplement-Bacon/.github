@@ -14,6 +14,7 @@ jobs:
 
     permissions:
       contents: write
+      packages: read
       pull-requests: read
 
     steps:
