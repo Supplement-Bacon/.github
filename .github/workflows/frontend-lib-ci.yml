@@ -1,0 +1,58 @@
+name: Frontend lib - Format & Lint
+
+on:
+  workflow_call:
+    inputs:
+      node-version:
+        required: false
+        type: string
+        default: "25"
+
+jobs:
+  format_and_lint:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      pull-requests: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+          ref: ${{ github.head_ref || github.ref_name }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run formatter
+        run: npm run format
+
+      - name: Auto-commit formatting (same-repo PRs only)
+        if: github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
+        run: |
+          if git diff --quiet; then
+            echo "No formatting changes to commit."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git commit -am "chore: apply formatting"
+          git push origin HEAD:"${BRANCH_NAME}"
+
+      - name: Ensure formatting is committed
+        run: git diff --exit-code
+
+      - name: Run linter
+        run: npm run lint
