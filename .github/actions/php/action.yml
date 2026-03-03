@@ -1,0 +1,67 @@
+name: "Setup PHP & Composer"
+description: "Generates GitHub App tokens, installs PHP, configures private package auth, and installs Composer dependencies"
+
+inputs:
+  app_id:
+    required: true
+    description: "GitHub App ID for token generation"
+  private_key:
+    required: true
+    description: "GitHub App private key"
+  php-version:
+    required: false
+    default: "8.4"
+    description: "PHP version to install"
+  extensions:
+    required: false
+    default: "mbstring, xml, ctype, iconv, intl"
+    description: "PHP extensions to install"
+  coverage:
+    required: false
+    default: "none"
+    description: "Coverage driver: none, pcov, or xdebug"
+
+outputs:
+  token:
+    description: "GitHub App token for Supplement-Bacon"
+    value: ${{ steps.tokens.outputs.token }}
+  token-paris:
+    description: "GitHub App token for Paris-Society"
+    value: ${{ steps.tokens.outputs.token-paris }}
+
+runs:
+  using: composite
+  steps:
+    - name: Generate GitHub App tokens
+      id: tokens
+      uses: ./.github/actions/github-token
+      with:
+        app_id: ${{ inputs.app_id }}
+        private_key: ${{ inputs.private_key }}
+
+    - name: Setup PHP ${{ inputs.php-version }}
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: ${{ inputs.php-version }}
+        extensions: ${{ inputs.extensions }}
+        coverage: ${{ inputs.coverage }}
+        ini-values: ${{ inputs.coverage == 'pcov' && 'pcov.directory=app' || '' }}
+
+    - name: Cache Composer dependencies
+      uses: actions/cache@v4
+      with:
+        path: ~/.composer/cache
+        key: ${{ runner.os }}-composer-${{ hashFiles('composer.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-composer-
+
+    - name: Configure Git auth for GitHub
+      shell: bash
+      run: |
+        git config --global url."https://x-access-token:${{ steps.tokens.outputs.token }}@github.com/Supplement-Bacon/".insteadOf "https://github.com/Supplement-Bacon/"
+        git config --global url."https://x-access-token:${{ steps.tokens.outputs.token }}@github.com/supplement-bacon/".insteadOf "https://github.com/supplement-bacon/"
+        git config --global url."https://x-access-token:${{ steps.tokens.outputs.token-paris }}@github.com/Paris-Society/".insteadOf "https://github.com/Paris-Society/"
+
+    - name: Install Composer dependencies
+      shell: bash
+      run: composer install --prefer-dist --no-interaction --no-progress --optimize-autoloader

@@ -1,0 +1,47 @@
+name: Laravel Pint
+
+on:
+  workflow_call: {}
+
+permissions:
+  contents: write
+
+jobs:
+  laravel-pint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_ID }}
+          private-key: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_PRIVATE_KEY }}
+          owner: Supplement-Bacon
+          repositories: table-booking-back-office-api
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref || github.ref_name }}
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Setup PHP & Composer
+        uses: ./.github/actions/php
+        with:
+          app_id: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_ID }}
+          private_key: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_PRIVATE_KEY }}
+
+      - name: Run Laravel Pint
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            ./vendor/bin/pint
+          else
+            ./vendor/bin/pint --test
+          fi
+
+      - name: Commit changes
+        if: github.event_name == 'pull_request'
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "style: fix code formatting with Laravel Pint"
+          branch: ${{ github.head_ref }}

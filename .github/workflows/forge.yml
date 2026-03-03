@@ -1,0 +1,27 @@
+name: Deploy
+
+on:
+  workflow_call:
+    inputs:
+      is_production:
+        required: true
+        type: boolean
+
+permissions:
+  contents: read
+
+jobs:
+  forge:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set deploy URL
+        id: set_url
+        run: |
+          if [ "${{ inputs.is_production }}" = "true" ]; then
+            echo "url=${{ secrets.PLETHORE_PRODUCTION_FORGE_DEPLOY_URL }}" >> $GITHUB_OUTPUT
+          else
+            echo "url=${{ secrets.PLETHORE_STAGING_FORGE_DEPLOY_URL }}" >> $GITHUB_OUTPUT
+          fi
+      - name: Trigger Forge Deploy
+        run: |
+          curl -X POST "${{ steps.set_url.outputs.url }}"

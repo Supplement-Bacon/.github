@@ -1,0 +1,178 @@
+name: PHPUnit
+
+on:
+  workflow_call:
+    inputs:
+      test-args:
+        required: false
+        type: string
+        default: "--parallel --processes=4 --colors=never"
+      run-example-tests:
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  phpunit:
+    if: inputs.run-example-tests != true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_ID }}
+          private-key: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_PRIVATE_KEY }}
+          owner: Supplement-Bacon
+          repositories: table-booking-back-office-api
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref || github.ref_name }}
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Setup PHP & Composer
+        uses: ./.github/actions/php
+        with:
+          app_id: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_ID }}
+          private_key: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_PRIVATE_KEY }}
+          coverage: pcov
+
+      - name: Setup Laravel environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      - name: Run tests with coverage
+        run: |
+          set -o pipefail
+          COVERAGE_ARGS=$(echo "${{ inputs.test-args }}" | sed -E 's/--parallel[[:space:]]*//g; s/--processes=[0-9]+[[:space:]]*//g')
+          php artisan test $COVERAGE_ARGS --coverage-clover=coverage.xml
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-pr
+          path: coverage.xml
+          retention-days: 1
+
+  phpunit-coverage:
+    if: github.event_name == 'pull_request' && inputs.run-example-tests != true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate GitHub App token (Supplement-Bacon)
+        id: app-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_ID }}
+          private-key: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_PRIVATE_KEY }}
+          owner: Supplement-Bacon
+          repositories: |
+            table-booking-back-office-api
+            laravel-trivec
+            laravel-paginable
+            laravel-api-toolkit
+
+      - name: Generate GitHub App token (Paris-Society)
+        id: app-token-paris
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_ID }}
+          private-key: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_PRIVATE_KEY }}
+          owner: Paris-Society
+          repositories: table-booking-backend
+
+      - name: Checkout base branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.ref }}
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          extensions: mbstring, xml, ctype, iconv, intl
+          coverage: pcov
+          ini-values: pcov.directory=app
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.composer/cache
+          key: ${{ runner.os }}-composer-${{ hashFiles('composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-composer-
+
+      - name: Configure Git auth for GitHub
+        run: |
+          git config --global url."https://x-access-token:${{ steps.app-token.outputs.token }}@github.com/Supplement-Bacon/".insteadOf "https://github.com/Supplement-Bacon/"
+          git config --global url."https://x-access-token:${{ steps.app-token.outputs.token }}@github.com/supplement-bacon/".insteadOf "https://github.com/supplement-bacon/"
+          git config --global url."https://x-access-token:${{ steps.app-token-paris.outputs.token }}@github.com/Paris-Society/".insteadOf "https://github.com/Paris-Society/"
+
+      - name: Install Composer dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress --optimize-autoloader
+
+      - name: Setup Laravel environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      - name: Run tests with coverage on base branch
+        continue-on-error: true
+        run: |
+          COVERAGE_ARGS=$(echo "${{ inputs.test-args }}" | sed -E 's/--parallel[[:space:]]*//g; s/--processes=[0-9]+[[:space:]]*//g')
+          php artisan test $COVERAGE_ARGS --coverage-clover=coverage-base.xml
+
+      - name: Fallback — empty coverage file if tests crashed
+        if: always()
+        run: |
+          if [ ! -f coverage-base.xml ]; then
+            echo '<?xml version="1.0"?><coverage><project><metrics statements="0" coveredstatements="0"/></project></coverage>' > coverage-base.xml
+          fi
+
+      - name: Upload base coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-base
+          path: coverage-base.xml
+          retention-days: 1
+
+  phpunit-test:
+    if: inputs.run-example-tests == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_ID }}
+          private-key: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_PRIVATE_KEY }}
+          owner: Supplement-Bacon
+          repositories: table-booking-back-office-api
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref || github.ref_name }}
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Setup PHP & Composer
+        uses: ./.github/actions/php
+        with:
+          app_id: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_ID }}
+          private_key: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_PRIVATE_KEY }}
+
+      - name: Setup Laravel environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      - name: Run Example tests
+        run: php artisan test tests/Feature/Example
