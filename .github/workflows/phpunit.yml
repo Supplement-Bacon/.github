@@ -143,36 +143,3 @@ jobs:
           name: coverage-base
           path: coverage-base.xml
           retention-days: 1
-
-  phpunit-test:
-    if: inputs.run-example-tests == true
-    runs-on: ubuntu-latest
-    steps:
-      - name: Generate GitHub App token
-        id: app-token
-        uses: actions/create-github-app-token@v1
-        with:
-          app-id: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_ID }}
-          private-key: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_PRIVATE_KEY }}
-          owner: Supplement-Bacon
-          repositories: table-booking-back-office-api
-
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.head_ref || github.ref_name }}
-          token: ${{ steps.app-token.outputs.token }}
-
-      - name: Setup PHP & Composer
-        uses: Supplement-Bacon/.github/.github/actions/php@feat/ci-back
-        with:
-          app_id: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_ID }}
-          private_key: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_PRIVATE_KEY }}
-
-      - name: Setup Laravel environment
-        run: |
-          cp .env.example .env
-          php artisan key:generate
-
-      - name: Run Example tests
-        run: php artisan test tests/Feature/Example
