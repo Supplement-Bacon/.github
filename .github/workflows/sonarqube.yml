@@ -1,7 +1,11 @@
 name: SonarQube
 
 on:
-  workflow_call: {}
+  workflow_call:
+    inputs:
+      repository:
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -18,7 +22,7 @@ jobs:
           app-id: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_ID }}
           private-key: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_PRIVATE_KEY }}
           owner: Supplement-Bacon
-          repositories: table-booking-back-office-api
+          repositories: ${{ inputs.repository }}
 
       - name: Checkout code
         uses: actions/checkout@v4

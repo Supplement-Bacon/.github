@@ -3,6 +3,9 @@ name: PHPUnit
 on:
   workflow_call:
     inputs:
+      repository:
+        required: true
+        type: string
       test-args:
         required: false
         type: string
@@ -27,7 +30,7 @@ jobs:
           app-id: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_ID }}
           private-key: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_PRIVATE_KEY }}
           owner: Supplement-Bacon
-          repositories: table-booking-back-office-api
+          repositories: ${{ inputs.repository }}
 
       - name: Checkout code
         uses: actions/checkout@v4
@@ -73,6 +76,7 @@ jobs:
           private-key: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_PRIVATE_KEY }}
           owner: Supplement-Bacon
           repositories: |
+            ${{ inputs.repository }}
             table-booking-back-office-api
             laravel-trivec
             laravel-paginable
