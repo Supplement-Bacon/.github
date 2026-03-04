@@ -1,0 +1,60 @@
+name: Coverage
+
+on:
+  pull_request:
+    branches:
+      - main
+      - dev
+      - refactor-core
+
+jobs:
+  factory-coverage:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          extensions: mbstring, bcmath, ctype, fileinfo, json, tokenizer, xml, pdo, pdo_mysql, openssl, curl, zip
+          coverage: none
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-composer-
+
+      - name: Configure git for private dependencies
+        run: |
+          git config --global url."https://${{ secrets.PACKAGE_TOKEN }}@github.com/".insteadOf "https://github.com/"
+
+      - name: Install dependencies
+        run: |
+          composer install --no-interaction --prefer-dist
+
+      - name: Run Factory Coverage command
+        id: factory_coverage
+        continue-on-error: true
+        run: |
+          php vendor/bin/testbench model:factory-coverage --markdown > factory-coverage.txt
+
+          echo "coverage<<EOF" >> $GITHUB_OUTPUT
+          cat factory-coverage.txt >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Comment PR
+        if: github.event_name == 'pull_request'
+        uses: thollander/actions-comment-pull-request@v3
+        with:
+          mode: upsert
+          comment-tag: "model-factory-coverage"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          message: |
+            ## 🧪 Model / Factory Coverage
+
+            ${{ steps.factory_coverage.outputs.coverage }}
