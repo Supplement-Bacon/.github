@@ -34,7 +34,7 @@ runs:
   steps:
     - name: Generate GitHub App tokens
       id: tokens
-      uses: Supplement-Bacon/.github/.github/actions/github-token@feat/ci-back
+      uses: Supplement-Bacon/.github/.github/actions/github-token@main
       with:
         app_id: ${{ inputs.app_id }}
         private_key: ${{ inputs.private_key }}

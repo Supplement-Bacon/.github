@@ -39,7 +39,7 @@ jobs:
           token: ${{ steps.app-token.outputs.token }}
 
       - name: Setup PHP & Composer
-        uses: Supplement-Bacon/.github/.github/actions/php@feat/ci-back
+        uses: Supplement-Bacon/.github/.github/actions/php@main
         with:
           app_id: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_ID }}
           private_key: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_PRIVATE_KEY }}
