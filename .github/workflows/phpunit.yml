@@ -130,6 +130,7 @@ jobs:
       - name: Run tests with coverage on base branch
         continue-on-error: true
         run: |
+          set -o pipefail
           COVERAGE_ARGS=$(echo "${{ inputs.test-args }}" | sed -E 's/--parallel[[:space:]]*//g; s/--processes=[0-9]+[[:space:]]*//g')
           php artisan test $COVERAGE_ARGS --coverage-clover=coverage-base.xml
 
