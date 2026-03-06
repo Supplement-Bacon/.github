@@ -189,20 +189,11 @@ jobs:
           EOF
           echo "$DELIMITER" >> "$GITHUB_OUTPUT"
 
-      - name: Find existing coverage comment
+      - name: Comment PR
         if: github.event_name == 'pull_request'
-        uses: peter-evans/find-comment@v3
-        id: find-comment
+        uses: thollander/actions-comment-pull-request@v3
         with:
-          issue-number: ${{ github.event.pull_request.number }}
-          comment-author: "github-actions[bot]"
-          body-includes: "<!-- sonarcloud-coverage-report -->"
-
-      - name: Post or update coverage comment
-        if: github.event_name == 'pull_request'
-        uses: peter-evans/create-or-update-comment@v4
-        with:
-          comment-id: ${{ steps.find-comment.outputs.comment-id }}
-          issue-number: ${{ github.event.pull_request.number }}
-          body: ${{ steps.build-comment.outputs.comment_body }}
-          edit-mode: replace
+          mode: upsert
+          comment-tag: "sonarcloud-coverage-report"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          message: ${{ steps.build-comment.outputs.comment_body }}
