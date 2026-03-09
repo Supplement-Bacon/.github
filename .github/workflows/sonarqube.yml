@@ -133,7 +133,7 @@ jobs:
           elif awk -v p="$pr_pct" -v b="$base_pct" 'BEGIN{exit !(p+0 < b+0)}'; then
             trend="decrease"; trend_icon="⬇️"; cov_sign="-"
           else
-            trend="not change"; trend_icon="➡️"; cov_sign=" "
+            trend="no change"; trend_icon="➡️"; cov_sign=" "
           fi
           hits_sign=$([ $pr_hits -ge $base_hits ] && echo "+" || echo "-")
           misses_sign=$([ $pr_misses -le $base_misses ] && echo "+" || echo "-")
