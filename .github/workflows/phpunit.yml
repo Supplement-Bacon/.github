@@ -29,7 +29,7 @@ jobs:
         with:
           app-id: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_ID }}
           private-key: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_PRIVATE_KEY }}
-          owner: Supplement-Bacon
+          owner: ${{ github.repository_owner }}
           repositories: ${{ inputs.repository }}
 
       - name: Checkout code
@@ -39,7 +39,7 @@ jobs:
           token: ${{ steps.app-token.outputs.token }}
 
       - name: Setup PHP & Composer
-        uses: Supplement-Bacon/.github/.github/actions/php@main
+        uses: Supplement-Bacon/.github/.github/actions/php@feat/ci-back
         with:
           app_id: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_ID }}
           private_key: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_PRIVATE_KEY }}
@@ -74,22 +74,13 @@ jobs:
         with:
           app-id: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_ID }}
           private-key: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_PRIVATE_KEY }}
-          owner: Supplement-Bacon
+          owner: ${{ github.repository_owner }}
           repositories: |
             ${{ inputs.repository }}
             table-booking-back-office-api
             laravel-trivec
             laravel-paginable
             laravel-api-toolkit
-
-      - name: Generate GitHub App token (Paris-Society)
-        id: app-token-paris
-        uses: actions/create-github-app-token@v1
-        with:
-          app-id: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_ID }}
-          private-key: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_PRIVATE_KEY }}
-          owner: Paris-Society
-          repositories: table-booking-backend
 
       - name: Checkout base branch
         uses: actions/checkout@v4
@@ -115,9 +106,7 @@ jobs:
 
       - name: Configure Git auth for GitHub
         run: |
-          git config --global url."https://x-access-token:${{ steps.app-token.outputs.token }}@github.com/Supplement-Bacon/".insteadOf "https://github.com/Supplement-Bacon/"
-          git config --global url."https://x-access-token:${{ steps.app-token.outputs.token }}@github.com/supplement-bacon/".insteadOf "https://github.com/supplement-bacon/"
-          git config --global url."https://x-access-token:${{ steps.app-token-paris.outputs.token }}@github.com/Paris-Society/".insteadOf "https://github.com/Paris-Society/"
+          git config --global url."https://x-access-token:${{ steps.app-token.outputs.token }}@github.com/${{ github.repository_owner }}/".insteadOf "https://github.com/${{ github.repository_owner }}/"
 
       - name: Install Composer dependencies
         run: composer install --prefer-dist --no-interaction --no-progress --optimize-autoloader

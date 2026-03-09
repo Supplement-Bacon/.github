@@ -21,7 +21,7 @@ jobs:
         with:
           app-id: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_ID }}
           private-key: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_PRIVATE_KEY }}
-          owner: Supplement-Bacon
+          owner: ${{ github.repository_owner }}
           repositories: ${{ inputs.repository }}
 
       - name: Checkout code
@@ -71,7 +71,7 @@ jobs:
         id: build-comment
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_PROJECT_KEY: Supplement-Bacon_table-booking-back-office-api
+          SONAR_PROJECT_KEY: "${{ github.repository_owner }}_${{ github.event.repository.name }}"
           PR_BRANCH: ${{ github.event.pull_request.head.ref }}
           BASE_BRANCH: ${{ github.event.pull_request.base.ref }}
         run: |

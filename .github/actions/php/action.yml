@@ -1,5 +1,5 @@
 name: "Setup PHP & Composer"
-description: "Generates GitHub App tokens, installs PHP, configures private package auth, and installs Composer dependencies"
+description: "Generates a GitHub App token, installs PHP, configures private package auth, and installs Composer dependencies"
 
 inputs:
   app_id:
@@ -23,21 +23,24 @@ inputs:
 
 outputs:
   token:
-    description: "GitHub App token for Supplement-Bacon"
+    description: "GitHub App token for the current repository owner"
     value: ${{ steps.tokens.outputs.token }}
-  token-paris:
-    description: "GitHub App token for Paris-Society"
-    value: ${{ steps.tokens.outputs.token-paris }}
 
 runs:
   using: composite
   steps:
     - name: Generate GitHub App tokens
       id: tokens
-      uses: Supplement-Bacon/.github/.github/actions/github-token@main
+      uses: Supplement-Bacon/.github/.github/actions/github-token@feat/ci-back
       with:
         app_id: ${{ inputs.app_id }}
         private_key: ${{ inputs.private_key }}
+        owner: ${{ github.repository_owner }}
+        repositories: |
+          table-booking-back-office-api
+          laravel-trivec
+          laravel-paginable
+          laravel-api-toolkit
 
     - name: Setup PHP ${{ inputs.php-version }}
       uses: shivammathur/setup-php@v2
@@ -58,9 +61,7 @@ runs:
     - name: Configure Git auth for GitHub
       shell: bash
       run: |
-        git config --global url."https://x-access-token:${{ steps.tokens.outputs.token }}@github.com/Supplement-Bacon/".insteadOf "https://github.com/Supplement-Bacon/"
-        git config --global url."https://x-access-token:${{ steps.tokens.outputs.token }}@github.com/supplement-bacon/".insteadOf "https://github.com/supplement-bacon/"
-        git config --global url."https://x-access-token:${{ steps.tokens.outputs.token-paris }}@github.com/Paris-Society/".insteadOf "https://github.com/Paris-Society/"
+        git config --global url."https://x-access-token:${{ steps.tokens.outputs.token }}@github.com/${{ github.repository_owner }}/".insteadOf "https://github.com/${{ github.repository_owner }}/"
 
     - name: Install Composer dependencies
       shell: bash

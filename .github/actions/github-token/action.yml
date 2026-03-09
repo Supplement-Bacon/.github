@@ -1,5 +1,5 @@
-name: "Setup GitHub App Tokens"
-description: "Setup GitHub App tokens for Supplement-Bacon and Paris-Society"
+name: "Setup GitHub App Token"
+description: "Setup a GitHub App token for one owner and a set of repositories"
 
 inputs:
   app_id:
@@ -8,14 +8,18 @@ inputs:
   private_key:
     required: true
     description: "GitHub App private key"
+  owner:
+    required: false
+    description: "Owner (organization or user) of the target repositories"
+    default: ${{ github.repository_owner }}
+  repositories:
+    required: true
+    description: "Newline-separated list of repositories the token should have access to"
 
 outputs:
   token:
-    description: "GitHub App token for Supplement-Bacon"
+    description: "GitHub App token for the given owner and repositories"
     value: ${{ steps.app-token.outputs.token }}
-  token-paris:
-    description: "GitHub App token for Paris-Society"
-    value: ${{ steps.app-token-paris.outputs.token }}
 
 runs:
   using: composite
@@ -26,18 +30,5 @@ runs:
       with:
         app-id: ${{ inputs.app_id }}
         private-key: ${{ inputs.private_key }}
-        repositories: |
-          table-booking-back-office-api
-          laravel-trivec
-          laravel-paginable
-          laravel-api-toolkit
-        owner: Supplement-Bacon
-
-    - name: Generate GitHub App token for Paris-Society
-      id: app-token-paris
-      uses: actions/create-github-app-token@v1
-      with:
-        app-id: ${{ inputs.app_id }}
-        private-key: ${{ inputs.private_key }}
-        repositories: table-booking-backend
-        owner: Paris-Society
+        repositories: ${{ inputs.repositories }}
+        owner: ${{ inputs.owner }}

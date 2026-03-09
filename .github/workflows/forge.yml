@@ -3,13 +3,7 @@ name: Deploy
 on:
   workflow_call:
     inputs:
-      is_production:
-        required: true
-        type: boolean
-      production_domain:
-        required: true
-        type: string
-      staging_domain:
+      environment:
         required: true
         type: string
     secrets:
@@ -24,12 +18,13 @@ permissions:
   contents: read
 
 concurrency:
-  group: forge-deploy-${{ inputs.is_production }}
+  group: forge-deploy-${{ inputs.environment }}
   cancel-in-progress: true
 
 jobs:
   forge:
     runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
     steps:
       - name: Add known hosts
         run: |
@@ -52,11 +47,6 @@ jobs:
         run: composer global require laravel/forge-cli
 
       - name: Deploy
-        run: |
-          if [ "${{ inputs.is_production }}" = "true" ]; then
-            forge deploy ${{ inputs.production_domain }} --wait
-          else
-            forge deploy ${{ inputs.staging_domain }} --wait
-          fi
+        run: forge deploy ${{ vars.DOMAIN }} --wait
         env:
           FORGE_API_TOKEN: ${{ secrets.FORGE_API_TOKEN }}
