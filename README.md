@@ -22,7 +22,7 @@ It centralizes reusable GitHub Actions workflows and composite actions consumed 
 
 ## Repository Structure
 
-```
+```text
 .github/
 ├── actions/
 │   ├── github-token/   # Composite action — generates GitHub App tokens
@@ -195,7 +195,11 @@ jobs:
     needs: [lint, test, sonar]
     if: github.ref == 'refs/heads/main'
     uses: Supplement-Bacon/.github/.github/workflows/forge.yml@main
-    secrets: inherit
+    secrets:
+      FORGE_API_TOKEN: ${{ secrets.FORGE_API_TOKEN }}
+      SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+      PLETHORE_PRODUCTION_DOMAIN: ${{ secrets.PLETHORE_PRODUCTION_DOMAIN }}
+      PLETHORE_STAGING_DOMAIN: ${{ secrets.PLETHORE_STAGING_DOMAIN }}
     with:
       is_production: false
 ```
@@ -209,8 +213,10 @@ The following secrets must be configured at organization level or in the calling
 | `BACKEND_CI_DEPENDENCIES_APP_ID`          | Laravel Pint, PHPUnit, SonarQube | GitHub App ID used for token generation |
 | `BACKEND_CI_DEPENDENCIES_APP_PRIVATE_KEY` | Laravel Pint, PHPUnit, SonarQube | GitHub App private key                  |
 | `SONAR_TOKEN`                             | SonarQube                        | SonarCloud authentication token         |
-| `PLETHORE_PRODUCTION_FORGE_DEPLOY_URL`    | Deploy (Forge)                   | Forge webhook URL — production          |
-| `PLETHORE_STAGING_FORGE_DEPLOY_URL`       | Deploy (Forge)                   | Forge webhook URL — staging             |
+| `FORGE_API_TOKEN`                         | Deploy (Forge)                   | Laravel Forge API token                 |
+| `SSH_PRIVATE_KEY`                         | Deploy (Forge)                   | SSH private key for Forge server access |
+| `PLETHORE_PRODUCTION_DOMAIN`              | Deploy (Forge)                   | Forge site/domain identifier (prod)     |
+| `PLETHORE_STAGING_DOMAIN`                 | Deploy (Forge)                   | Forge site/domain identifier (staging)  |
 
 ---
 
