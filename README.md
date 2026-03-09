@@ -33,6 +33,7 @@ It centralizes reusable GitHub Actions workflows and composite actions consumed 
     ├── forge.yml             # Deploy via Laravel Forge
     ├── frontend-lib-ci.yml   # Format & lint for frontend libraries
     ├── laravel-pint.yml      # PHP code formatting with Laravel Pint
+    ├── model-coverage.yml    # Model test coverage reporting
     ├── phpunit.yml           # PHPUnit tests & coverage
     └── sonarqube.yml         # SonarCloud analysis & PR comment
 ```
