@@ -46,12 +46,7 @@ jobs:
           extra_repositories: ${{ inputs.extra_repositories }}
 
       - name: Run Laravel Pint
-        run: |
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            ./vendor/bin/pint
-          else
-            ./vendor/bin/pint --test
-          fi
+        run: ./vendor/bin/pint
 
       - name: Commit changes
         if: github.event_name == 'pull_request'
