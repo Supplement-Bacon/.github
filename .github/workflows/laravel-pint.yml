@@ -6,6 +6,14 @@ on:
       repository:
         required: true
         type: string
+      extra_owner:
+        required: false
+        type: string
+        default: ""
+      extra_repositories:
+        required: false
+        type: string
+        default: ""
 
 permissions:
   contents: write
@@ -34,6 +42,8 @@ jobs:
         with:
           app_id: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_ID }}
           private_key: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_PRIVATE_KEY }}
+          extra_owner: ${{ inputs.extra_owner }}
+          extra_repositories: ${{ inputs.extra_repositories }}
 
       - name: Run Laravel Pint
         run: |

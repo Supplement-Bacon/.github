@@ -20,6 +20,14 @@ inputs:
     required: false
     default: "none"
     description: "Coverage driver: none, pcov, or xdebug"
+  extra_owner:
+    required: false
+    description: "Optional extra owner (organization or user) for additional private repositories"
+    default: ""
+  extra_repositories:
+    required: false
+    description: "Newline-separated list of extra repositories (for extra_owner) the token should have access to"
+    default: ""
 
 outputs:
   token:
@@ -42,6 +50,16 @@ runs:
           laravel-paginable
           laravel-api-toolkit
 
+    - name: Generate extra GitHub App token
+      if: ${{ inputs.extra_owner != '' && inputs.extra_repositories != '' }}
+      id: tokens-extra
+      uses: Supplement-Bacon/.github/.github/actions/github-token@feat/ci-back
+      with:
+        app_id: ${{ inputs.app_id }}
+        private_key: ${{ inputs.private_key }}
+        owner: ${{ inputs.extra_owner }}
+        repositories: ${{ inputs.extra_repositories }}
+
     - name: Setup PHP ${{ inputs.php-version }}
       uses: shivammathur/setup-php@v2
       with:
@@ -62,6 +80,9 @@ runs:
       shell: bash
       run: |
         git config --global url."https://x-access-token:${{ steps.tokens.outputs.token }}@github.com/${{ github.repository_owner }}/".insteadOf "https://github.com/${{ github.repository_owner }}/"
+        if [ "${{ inputs.extra_owner }}" != "" ] && [ "${{ inputs.extra_repositories }}" != "" ]; then
+          git config --global url."https://x-access-token:${{ steps.tokens-extra.outputs.token }}@github.com/${{ inputs.extra_owner }}/".insteadOf "https://github.com/${{ inputs.extra_owner }}/"
+        fi
 
     - name: Install Composer dependencies
       shell: bash

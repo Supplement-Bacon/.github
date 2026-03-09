@@ -14,6 +14,14 @@ on:
         required: false
         type: boolean
         default: false
+      extra_owner:
+        required: false
+        type: string
+        default: ""
+      extra_repositories:
+        required: false
+        type: string
+        default: ""
 
 permissions:
   contents: read
@@ -44,6 +52,8 @@ jobs:
           app_id: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_ID }}
           private_key: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_PRIVATE_KEY }}
           coverage: pcov
+          extra_owner: ${{ inputs.extra_owner }}
+          extra_repositories: ${{ inputs.extra_repositories }}
 
       - name: Setup Laravel environment
         run: |
@@ -82,6 +92,16 @@ jobs:
             laravel-paginable
             laravel-api-toolkit
 
+      - name: Generate extra GitHub App token
+        if: ${{ inputs.extra_owner != '' && inputs.extra_repositories != '' }}
+        id: app-token-extra
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_ID }}
+          private-key: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_PRIVATE_KEY }}
+          owner: ${{ inputs.extra_owner }}
+          repositories: ${{ inputs.extra_repositories }}
+
       - name: Checkout base branch
         uses: actions/checkout@v4
         with:
@@ -107,6 +127,9 @@ jobs:
       - name: Configure Git auth for GitHub
         run: |
           git config --global url."https://x-access-token:${{ steps.app-token.outputs.token }}@github.com/${{ github.repository_owner }}/".insteadOf "https://github.com/${{ github.repository_owner }}/"
+          if [ "${{ inputs.extra_owner }}" != "" ] && [ "${{ inputs.extra_repositories }}" != "" ]; then
+            git config --global url."https://x-access-token:${{ steps.app-token-extra.outputs.token }}@github.com/${{ inputs.extra_owner }}/".insteadOf "https://github.com/${{ inputs.extra_owner }}/"
+          fi
 
       - name: Install Composer dependencies
         run: composer install --prefer-dist --no-interaction --no-progress --optimize-autoloader
