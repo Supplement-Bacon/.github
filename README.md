@@ -96,11 +96,27 @@ Runs [SonarCloud](https://sonarcloud.io/) analysis and posts a coverage comment 
 
 Triggers a deployment through [Laravel Forge](https://forge.laravel.com/).
 
-| Input           | Type      | Required | Description                                                               |
-| --------------- | --------- | -------- | ------------------------------------------------------------------------- |
-| `is_production` | `boolean` | ✅       | If `true`, uses the **production** deploy URL; otherwise uses **staging** |
+| Input         | Type     | Required | Description                                         |
+| ------------- | -------- | -------- | --------------------------------------------------- |
+| `environment` | `string` | ✅       | GitHub environment name (`production` or `staging`) |
 
-A simple `curl -X POST` call is sent to the matching Forge deploy URL.
+**Secrets required:**
+
+| Secret            | Description                   |
+| ----------------- | ----------------------------- |
+| `FORGE_API_TOKEN` | Laravel Forge API token       |
+| `SSH_PRIVATE_KEY` | SSH private key               |
+| `SSH_KNOWN_HOSTS` | SSH known hosts configuration |
+
+**Environment Variables:**
+
+Each environment (`production`, `staging`) must define:
+
+| Variable | Description         |
+| -------- | ------------------- |
+| `DOMAIN` | Forge server domain |
+
+The deployment connects to the server defined in the `DOMAIN` variable of the selected environment.
 
 ### Frontend Lib CI
 
