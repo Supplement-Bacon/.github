@@ -62,16 +62,17 @@ Automatically formats PHP code with [Laravel Pint](https://laravel.com/docs/pint
 
 Runs PHPUnit tests with coverage handling.
 
-| Input               | Type      | Required | Default                                   | Description                                                                                 |
-| ------------------- | --------- | -------- | ----------------------------------------- | ------------------------------------------------------------------------------------------- |
-| `repository`        | `string`  | ✅       | —                                         | Repository name to grant GitHub App token access to                                       |
-| `test-args`         | `string`  | ❌       | `--parallel --processes=4 --colors=never` | Arguments passed to PHPUnit                                                                 |
+| Input               | Type      | Required | Default                                   | Description                                                                                |
+| ------------------- | --------- | -------- | ----------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `repository`        | `string`  | ✅       | —                                         | Repository name to grant GitHub App token access to                                        |
+| `test-args`         | `string`  | ❌       | `--parallel --processes=4 --colors=never` | Arguments passed to PHPUnit                                                                |
 | `run-example-tests` | `boolean` | ❌       | `false`                                   | If `true`, skips the standard PHPUnit jobs so example-only test workflows can run instead. |
 
 **2 jobs are defined:**
 
 1. **phpunit** — Runs the full test suite with coverage (`pcov`), then uploads `coverage.xml` as an artifact.
 2. **phpunit-coverage** — On pull requests, checks out the base branch and generates a reference coverage report (`coverage-base.xml`) used for SonarQube comparison.
+
 ### SonarQube
 
 > `.github/workflows/sonarqube.yml`
@@ -206,17 +207,16 @@ jobs:
     with:
       repository: table-booking-membership-api
 
-  deploy-staging:
+  deploy:
     needs: [lint, test, sonar]
-    if: github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/main')
     uses: Supplement-Bacon/.github/.github/workflows/forge.yml@main
     secrets:
       FORGE_API_TOKEN: ${{ secrets.FORGE_API_TOKEN }}
       SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-      PLETHORE_PRODUCTION_DOMAIN: ${{ secrets.PLETHORE_PRODUCTION_DOMAIN }}
-      PLETHORE_STAGING_DOMAIN: ${{ secrets.PLETHORE_STAGING_DOMAIN }}
+      SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
     with:
-      is_production: false
+      environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
 ```
 
 ## Required Secrets
@@ -230,8 +230,9 @@ The following secrets must be configured at organization level or in the calling
 | `SONAR_TOKEN`                             | SonarQube                        | SonarCloud authentication token         |
 | `FORGE_API_TOKEN`                         | Deploy (Forge)                   | Laravel Forge API token                 |
 | `SSH_PRIVATE_KEY`                         | Deploy (Forge)                   | SSH private key for Forge server access |
-| `PLETHORE_PRODUCTION_DOMAIN`              | Deploy (Forge)                   | Forge site/domain identifier (prod)     |
-| `PLETHORE_STAGING_DOMAIN`                 | Deploy (Forge)                   | Forge site/domain identifier (staging)  |
+| `SSH_KNOWN_HOSTS`                         | Deploy (Forge)                   | SSH known hosts configuration           |
+
+> **Environment variables:** The `DOMAIN` variable must be set on each GitHub Environment (`production`, `staging`) in the repository settings — not as a secret.
 
 ---
 
