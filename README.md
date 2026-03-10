@@ -62,18 +62,16 @@ Automatically formats PHP code with [Laravel Pint](https://laravel.com/docs/pint
 
 Runs PHPUnit tests with coverage handling.
 
-| Input               | Type      | Required | Default                                   | Description                                         |
-| ------------------- | --------- | -------- | ----------------------------------------- | --------------------------------------------------- |
-| `repository`        | `string`  | ✅       | —                                         | Repository name to grant GitHub App token access to |
-| `test-args`         | `string`  | ❌       | `--parallel --processes=4 --colors=never` | Arguments passed to PHPUnit                         |
-| `run-example-tests` | `boolean` | ❌       | `false`                                   | If `true`, runs only example test files             |
+| Input               | Type      | Required | Default                                   | Description                                                                                 |
+| ------------------- | --------- | -------- | ----------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `repository`        | `string`  | ✅       | —                                         | Repository name to grant GitHub App token access to                                       |
+| `test-args`         | `string`  | ❌       | `--parallel --processes=4 --colors=never` | Arguments passed to PHPUnit                                                                 |
+| `run-example-tests` | `boolean` | ❌       | `false`                                   | If `true`, skips the standard PHPUnit jobs so example-only test workflows can run instead. |
 
-**3 jobs are defined:**
+**2 jobs are defined:**
 
 1. **phpunit** — Runs the full test suite with coverage (`pcov`), then uploads `coverage.xml` as an artifact.
 2. **phpunit-coverage** — On pull requests, checks out the base branch and generates a reference coverage report (`coverage-base.xml`) used for SonarQube comparison.
-3. **phpunit-test** — If `run-example-tests` is `true`, runs only tests in `tests/Feature/Example`.
-
 ### SonarQube
 
 > `.github/workflows/sonarqube.yml`
