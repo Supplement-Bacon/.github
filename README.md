@@ -54,7 +54,7 @@ Automatically formats PHP code with [Laravel Pint](https://laravel.com/docs/pint
 
 - Uses the **PHP** composite action to install PHP & Composer.
 - On a **pull request**: runs Pint and automatically commits formatting fixes via `stefanzweifel/git-auto-commit-action`.
-- On a **push**: runs Pint in `--test` mode (fails if code is not formatted).
+- On a **push**: runs Pint in fix mode (fails if code is not formatted and leaves changes in the working tree).
 
 ### PHPUnit
 
