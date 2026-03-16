@@ -26,6 +26,7 @@ on:
 permissions:
   contents: read
   actions: write
+  actions: write
 
 jobs:
   phpunit:
