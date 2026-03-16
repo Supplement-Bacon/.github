@@ -13,12 +13,13 @@ inputs:
     description: "Owner (organization or user) of the target repositories"
     default: ""
   repositories:
-    required: true
-    description: "Newline-separated list of repositories the token should have access to"
+    required: false
+    description: "Unused – kept for documentation. Token is scoped at owner level."
+    default: ""
 
 outputs:
   token:
-    description: "GitHub App token for the given owner and repositories"
+    description: "GitHub App token for the given owner (all repositories the App is installed on)"
     value: ${{ steps.app-token.outputs.token }}
 
 runs:
@@ -30,5 +31,4 @@ runs:
       with:
         app-id: ${{ inputs.app_id }}
         private-key: ${{ inputs.private_key }}
-        repositories: ${{ inputs.repositories }}
         owner: ${{ inputs.owner }}

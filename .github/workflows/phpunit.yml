@@ -81,7 +81,6 @@ jobs:
           app-id: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_ID }}
           private-key: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_PRIVATE_KEY }}
           owner: ${{ github.repository_owner }}
-          repositories: ${{ inputs.composer_repositories }}
 
       - name: Generate extra GitHub App token
         if: ${{ inputs.extra_owner != '' && inputs.extra_repositories != '' }}
