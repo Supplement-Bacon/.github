@@ -26,27 +26,17 @@ jobs:
   laravel-pint:
     runs-on: ubuntu-latest
     steps:
-      - name: Generate GitHub App token
-        id: app-token
-        uses: actions/create-github-app-token@v1
-        with:
-          app-id: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_ID }}
-          private-key: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_PRIVATE_KEY }}
-          owner: ${{ github.repository_owner }}
-          repositories: ${{ inputs.repository }}
-
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           ref: ${{ github.head_ref || github.ref_name }}
-          token: ${{ steps.app-token.outputs.token }}
 
       - name: Setup PHP & Composer
         uses: Supplement-Bacon/.github/.github/actions/php@feat/ci-back
         with:
           app_id: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_ID }}
           private_key: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_PRIVATE_KEY }}
-          repositories: ${{ inputs.composer_repositories != '' && format('{0}\n{1}', inputs.repository, inputs.composer_repositories) || inputs.repository }}
+          repositories: ${{ inputs.composer_repositories != '' && inputs.composer_repositories || inputs.repository }}
           extra_owner: ${{ inputs.extra_owner }}
           extra_repositories: ${{ inputs.extra_repositories }}
 
