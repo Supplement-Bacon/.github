@@ -198,7 +198,7 @@ on:
 
 jobs:
   lint:
-    uses: Supplement-Bacon/.github/.github/workflows/laravel-pint.yml@feat/ci-back
+    uses: Supplement-Bacon/.github/.github/workflows/laravel-pint.yml@main
     secrets: inherit
     with:
       repository: table-booking-membership-api
@@ -208,7 +208,7 @@ jobs:
         laravel-api-toolkit
 
   test:
-    uses: Supplement-Bacon/.github/.github/workflows/phpunit.yml@feat/ci-back
+    uses: Supplement-Bacon/.github/.github/workflows/phpunit.yml@main
     secrets: inherit
     with:
       repository: table-booking-membership-api
@@ -220,7 +220,7 @@ jobs:
 
   sonar:
     needs: test
-    uses: Supplement-Bacon/.github/.github/workflows/sonarqube.yml@feat/ci-back
+    uses: Supplement-Bacon/.github/.github/workflows/sonarqube.yml@main
     secrets: inherit
     with:
       repository: table-booking-membership-api
@@ -228,7 +228,7 @@ jobs:
   deploy:
     needs: [lint, test, sonar]
     if: github.event_name == 'push' && (github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/main')
-    uses: Supplement-Bacon/.github/.github/workflows/forge.yml@feat/ci-back
+    uses: Supplement-Bacon/.github/.github/workflows/forge.yml@main
     secrets:
       FORGE_API_TOKEN: ${{ secrets.FORGE_API_TOKEN }}
       SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
