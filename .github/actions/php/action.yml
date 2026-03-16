@@ -44,7 +44,7 @@ runs:
     - name: Generate GitHub App tokens
       if: ${{ inputs.repositories != '' }}
       id: tokens
-      uses: Supplement-Bacon/.github/.github/actions/github-token@main
+      uses: Supplement-Bacon/.github/.github/actions/github-token@feat/ci-back
       with:
         app_id: ${{ inputs.app_id }}
         private_key: ${{ inputs.private_key }}
@@ -54,7 +54,7 @@ runs:
     - name: Generate extra GitHub App token
       if: ${{ inputs.extra_owner != '' && inputs.extra_repositories != '' }}
       id: tokens-extra
-      uses: Supplement-Bacon/.github/.github/actions/github-token@main
+      uses: Supplement-Bacon/.github/.github/actions/github-token@feat/ci-back
       with:
         app_id: ${{ inputs.app_id }}
         private_key: ${{ inputs.private_key }}
