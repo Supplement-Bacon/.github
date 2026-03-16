@@ -7,7 +7,7 @@ on:
         required: true
         type: string
       composer_repositories:
-        required: true
+        required: false
         type: string
         default: ""
       test-args:
@@ -36,27 +36,17 @@ jobs:
     if: inputs.run-example-tests != true
     runs-on: ubuntu-latest
     steps:
-      - name: Generate GitHub App token
-        id: app-token
-        uses: actions/create-github-app-token@v1
-        with:
-          app-id: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_ID }}
-          private-key: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_PRIVATE_KEY }}
-          owner: ${{ github.repository_owner }}
-          repositories: ${{ inputs.repository }}
-
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           ref: ${{ github.head_ref || github.ref_name }}
-          token: ${{ steps.app-token.outputs.token }}
 
       - name: Setup PHP & Composer
         uses: Supplement-Bacon/.github/.github/actions/php@feat/ci-back
         with:
           app_id: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_ID }}
           private_key: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_PRIVATE_KEY }}
-          repositories: ${{ inputs.composer_repositories != '' && format('{0}\n{1}', inputs.repository, inputs.composer_repositories) || inputs.repository }}
+          repositories: ${{ inputs.composer_repositories != '' && inputs.composer_repositories || inputs.repository }}
           coverage: pcov
           extra_owner: ${{ inputs.extra_owner }}
           extra_repositories: ${{ inputs.extra_repositories }}
@@ -91,7 +81,7 @@ jobs:
           app-id: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_ID }}
           private-key: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_PRIVATE_KEY }}
           owner: ${{ github.repository_owner }}
-          repositories: ${{ inputs.composer_repositories != '' && format('{0}\n{1}', inputs.repository, inputs.composer_repositories) || inputs.repository }}
+          repositories: ${{ inputs.composer_repositories }}
 
       - name: Generate extra GitHub App token
         if: ${{ inputs.extra_owner != '' && inputs.extra_repositories != '' }}
@@ -107,7 +97,6 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.base.ref }}
-          token: ${{ steps.app-token.outputs.token }}
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
