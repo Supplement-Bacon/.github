@@ -48,13 +48,16 @@ All workflows are triggered via `workflow_call` and are designed to be called fr
 
 Automatically formats PHP code with [Laravel Pint](https://laravel.com/docs/pint).
 
-| Input        | Type     | Required | Description                                         |
-| ------------ | -------- | -------- | --------------------------------------------------- |
-| `repository` | `string` | ✅       | Repository name to grant GitHub App token access to |
+| Input                   | Type     | Required | Default | Description                                                                 |
+| ----------------------- | -------- | -------- | ------- | --------------------------------------------------------------------------- |
+| `repository`            | `string` | ✅       | —       | Fallback repository name when no additional Composer repositories are given |
+| `composer_repositories` | `string` | ❌       | `""`    | Newline-separated private repositories needed during Composer install       |
+| `extra_owner`           | `string` | ❌       | `""`    | Optional second owner (organization/user) for additional private repos      |
+| `extra_repositories`    | `string` | ❌       | `""`    | Newline-separated repositories for `extra_owner`                            |
 
 - Uses the **PHP** composite action to install PHP & Composer.
-- On a **pull request**: runs Pint and automatically commits formatting fixes via `stefanzweifel/git-auto-commit-action`.
-- On a **push**: runs Pint in fix mode (fails if code is not formatted and leaves changes in the working tree).
+- On a **pull request**: runs Pint in fix mode and automatically commits formatting fixes via `stefanzweifel/git-auto-commit-action`.
+- On a **push**: runs Pint in check mode (`--test`) and fails if formatting is not compliant.
 
 ### PHPUnit
 
@@ -62,11 +65,14 @@ Automatically formats PHP code with [Laravel Pint](https://laravel.com/docs/pint
 
 Runs PHPUnit tests with coverage handling.
 
-| Input               | Type      | Required | Default                                   | Description                                                                                |
-| ------------------- | --------- | -------- | ----------------------------------------- | ------------------------------------------------------------------------------------------ |
-| `repository`        | `string`  | ✅       | —                                         | Repository name to grant GitHub App token access to                                        |
-| `test-args`         | `string`  | ❌       | `--parallel --processes=4 --colors=never` | Arguments passed to PHPUnit                                                                |
-| `run-example-tests` | `boolean` | ❌       | `false`                                   | If `true`, skips the standard PHPUnit jobs so example-only test workflows can run instead. |
+| Input                   | Type      | Required | Default                                   | Description                                                                                |
+| ----------------------- | --------- | -------- | ----------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `repository`            | `string`  | ✅       | —                                         | Fallback repository name when no additional Composer repositories are given                |
+| `composer_repositories` | `string`  | ❌       | `""`                                      | Newline-separated private repositories needed during Composer install                      |
+| `test-args`             | `string`  | ❌       | `--parallel --processes=4 --colors=never` | Arguments passed to PHPUnit                                                                |
+| `run-example-tests`     | `boolean` | ❌       | `false`                                   | If `true`, skips the standard PHPUnit jobs so example-only test workflows can run instead. |
+| `extra_owner`           | `string`  | ❌       | `""`                                      | Optional second owner (organization/user) for additional private repos                     |
+| `extra_repositories`    | `string`  | ❌       | `""`                                      | Newline-separated repositories for `extra_owner`                                           |
 
 **2 jobs are defined:**
 
@@ -141,15 +147,16 @@ Formatting and linting pipeline for frontend libraries (npm).
 
 Generates GitHub App tokens used to access private organization repositories.
 
-| Input         | Required | Description            |
-| ------------- | -------- | ---------------------- |
-| `app_id`      | ✅       | GitHub App ID          |
-| `private_key` | ✅       | GitHub App private key |
+| Input          | Required | Default | Description                                                          |
+| -------------- | -------- | ------- | -------------------------------------------------------------------- |
+| `app_id`       | ✅       | —       | GitHub App ID                                                        |
+| `private_key`  | ✅       | —       | GitHub App private key                                               |
+| `owner`        | ❌       | `""`    | Owner (organization or user) for token generation                    |
+| `repositories` | ❌       | `""`    | Unused (kept for compatibility/documentation); token is owner-scoped |
 
-| Output        | Description                                                                                                                                 |
-| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| `token`       | Token for **Supplement-Bacon** repositories (`table-booking-back-office-api`, `laravel-trivec`, `laravel-paginable`, `laravel-api-toolkit`) |
-| `token-paris` | Token for **Paris-Society** repository (`table-booking-backend`)                                                                            |
+| Output  | Description                                                                        |
+| ------- | ---------------------------------------------------------------------------------- |
+| `token` | GitHub App token for the given owner (all repositories where the App is installed) |
 
 ### PHP
 
@@ -157,20 +164,23 @@ Generates GitHub App tokens used to access private organization repositories.
 
 All-in-one action that sets up a complete PHP environment.
 
-| Input         | Required | Default                             | Description                                  |
-| ------------- | -------- | ----------------------------------- | -------------------------------------------- |
-| `app_id`      | ✅       | —                                   | GitHub App ID                                |
-| `private_key` | ✅       | —                                   | GitHub App private key                       |
-| `php-version` | ❌       | `8.4`                               | PHP version                                  |
-| `extensions`  | ❌       | `mbstring, xml, ctype, iconv, intl` | PHP extensions                               |
-| `coverage`    | ❌       | `none`                              | Coverage driver: `none`, `pcov`, or `xdebug` |
+| Input                | Required | Default                             | Description                                                     |
+| -------------------- | -------- | ----------------------------------- | --------------------------------------------------------------- |
+| `app_id`             | ✅       | —                                   | GitHub App ID                                                   |
+| `private_key`        | ✅       | —                                   | GitHub App private key                                          |
+| `repositories`       | ✅       | —                                   | Newline-separated repositories for the current owner auth scope |
+| `php-version`        | ❌       | `8.4`                               | PHP version                                                     |
+| `extensions`         | ❌       | `mbstring, xml, ctype, iconv, intl` | PHP extensions                                                  |
+| `coverage`           | ❌       | `none`                              | Coverage driver: `none`, `pcov`, or `xdebug`                    |
+| `extra_owner`        | ❌       | `""`                                | Optional second owner (organization/user)                       |
+| `extra_repositories` | ❌       | `""`                                | Newline-separated repositories for `extra_owner`                |
 
 **Steps performed:**
 
 1. Generates tokens via the **GitHub Token** composite action.
 2. Installs PHP with the requested extensions and coverage driver (`shivammathur/setup-php`).
 3. Caches Composer dependencies.
-4. Configures Git authentication for private Supplement-Bacon and Paris-Society repositories.
+4. Configures Git authentication for the current owner and, optionally, one extra owner.
 5. Installs Composer dependencies.
 
 ## Usage
@@ -188,21 +198,29 @@ on:
 
 jobs:
   lint:
-    uses: Supplement-Bacon/.github/.github/workflows/laravel-pint.yml@main
+    uses: Supplement-Bacon/.github/.github/workflows/laravel-pint.yml@feat/ci-back
     secrets: inherit
     with:
       repository: table-booking-membership-api
+      composer_repositories: |
+        laravel-trivec
+        laravel-paginable
+        laravel-api-toolkit
 
   test:
-    uses: Supplement-Bacon/.github/.github/workflows/phpunit.yml@main
+    uses: Supplement-Bacon/.github/.github/workflows/phpunit.yml@feat/ci-back
     secrets: inherit
     with:
       repository: table-booking-membership-api
+      composer_repositories: |
+        laravel-trivec
+        laravel-paginable
+        laravel-api-toolkit
       test-args: "--parallel --processes=4 --colors=never"
 
   sonar:
     needs: test
-    uses: Supplement-Bacon/.github/.github/workflows/sonarqube.yml@main
+    uses: Supplement-Bacon/.github/.github/workflows/sonarqube.yml@feat/ci-back
     secrets: inherit
     with:
       repository: table-booking-membership-api
@@ -210,7 +228,7 @@ jobs:
   deploy:
     needs: [lint, test, sonar]
     if: github.event_name == 'push' && (github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/main')
-    uses: Supplement-Bacon/.github/.github/workflows/forge.yml@main
+    uses: Supplement-Bacon/.github/.github/workflows/forge.yml@feat/ci-back
     secrets:
       FORGE_API_TOKEN: ${{ secrets.FORGE_API_TOKEN }}
       SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
