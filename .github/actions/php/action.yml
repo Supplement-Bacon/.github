@@ -9,8 +9,9 @@ inputs:
     required: true
     description: "GitHub App private key"
   repositories:
-    required: true
-    description: "Newline-separated list of repositories (same owner) the token should have access to"
+    required: false
+    description: "Newline-separated list of additional private repositories (same owner) needed during Composer install"
+    default: ""
   php-version:
     required: false
     default: "8.4"
@@ -34,13 +35,14 @@ inputs:
 
 outputs:
   token:
-    description: "GitHub App token for the current repository owner"
+    description: "GitHub App token for additional private repositories under the current owner"
     value: ${{ steps.tokens.outputs.token }}
 
 runs:
   using: composite
   steps:
     - name: Generate GitHub App tokens
+      if: ${{ inputs.repositories != '' }}
       id: tokens
       uses: Supplement-Bacon/.github/.github/actions/github-token@main
       with:
@@ -78,7 +80,9 @@ runs:
     - name: Configure Git auth for GitHub
       shell: bash
       run: |
-        git config --global url."https://x-access-token:${{ steps.tokens.outputs.token }}@github.com/${{ github.repository_owner }}/".insteadOf "https://github.com/${{ github.repository_owner }}/"
+        if [ "${{ inputs.repositories }}" != "" ]; then
+          git config --global url."https://x-access-token:${{ steps.tokens.outputs.token }}@github.com/${{ github.repository_owner }}/".insteadOf "https://github.com/${{ github.repository_owner }}/"
+        fi
         if [ "${{ inputs.extra_owner }}" != "" ] && [ "${{ inputs.extra_repositories }}" != "" ]; then
           git config --global url."https://x-access-token:${{ steps.tokens-extra.outputs.token }}@github.com/${{ inputs.extra_owner }}/".insteadOf "https://github.com/${{ inputs.extra_owner }}/"
         fi

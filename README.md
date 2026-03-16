@@ -50,7 +50,7 @@ Automatically formats PHP code with [Laravel Pint](https://laravel.com/docs/pint
 
 | Input                   | Type     | Required | Default | Description                                                                 |
 | ----------------------- | -------- | -------- | ------- | --------------------------------------------------------------------------- |
-| `repository`            | `string` | ✅       | —       | Fallback repository name when no additional Composer repositories are given |
+| `repository`            | `string` | ✅       | —       | Repository name of the caller workflow                                      |
 | `composer_repositories` | `string` | ❌       | `""`    | Newline-separated private repositories needed during Composer install       |
 | `extra_owner`           | `string` | ❌       | `""`    | Optional second owner (organization/user) for additional private repos      |
 | `extra_repositories`    | `string` | ❌       | `""`    | Newline-separated repositories for `extra_owner`                            |
@@ -67,7 +67,7 @@ Runs PHPUnit tests with coverage handling.
 
 | Input                   | Type      | Required | Default                                   | Description                                                                                |
 | ----------------------- | --------- | -------- | ----------------------------------------- | ------------------------------------------------------------------------------------------ |
-| `repository`            | `string`  | ✅       | —                                         | Fallback repository name when no additional Composer repositories are given                |
+| `repository`            | `string`  | ✅       | —                                         | Repository name of the caller workflow                                                     |
 | `composer_repositories` | `string`  | ❌       | `""`                                      | Newline-separated private repositories needed during Composer install                      |
 | `test-args`             | `string`  | ❌       | `--parallel --processes=4 --colors=never` | Arguments passed to PHPUnit                                                                |
 | `run-example-tests`     | `boolean` | ❌       | `false`                                   | If `true`, skips the standard PHPUnit jobs so example-only test workflows can run instead. |
@@ -152,11 +152,11 @@ Generates GitHub App tokens used to access private organization repositories.
 | `app_id`       | ✅       | —       | GitHub App ID                                                        |
 | `private_key`  | ✅       | —       | GitHub App private key                                               |
 | `owner`        | ❌       | `""`    | Owner (organization or user) for token generation                    |
-| `repositories` | ❌       | `""`    | Unused (kept for compatibility/documentation); token is owner-scoped |
+| `repositories` | ❌       | `""`    | Newline-separated repositories to scope the token to                 |
 
 | Output  | Description                                                                        |
 | ------- | ---------------------------------------------------------------------------------- |
-| `token` | GitHub App token for the given owner (all repositories where the App is installed) |
+| `token` | GitHub App token for the given owner, optionally scoped to the listed repositories |
 
 ### PHP
 
@@ -164,23 +164,23 @@ Generates GitHub App tokens used to access private organization repositories.
 
 All-in-one action that sets up a complete PHP environment.
 
-| Input                | Required | Default                             | Description                                                     |
-| -------------------- | -------- | ----------------------------------- | --------------------------------------------------------------- |
-| `app_id`             | ✅       | —                                   | GitHub App ID                                                   |
-| `private_key`        | ✅       | —                                   | GitHub App private key                                          |
-| `repositories`       | ✅       | —                                   | Newline-separated repositories for the current owner auth scope |
-| `php-version`        | ❌       | `8.4`                               | PHP version                                                     |
-| `extensions`         | ❌       | `mbstring, xml, ctype, iconv, intl` | PHP extensions                                                  |
-| `coverage`           | ❌       | `none`                              | Coverage driver: `none`, `pcov`, or `xdebug`                    |
-| `extra_owner`        | ❌       | `""`                                | Optional second owner (organization/user)                       |
-| `extra_repositories` | ❌       | `""`                                | Newline-separated repositories for `extra_owner`                |
+| Input                | Required | Default                             | Description                                          |
+| -------------------- | -------- | ----------------------------------- | ---------------------------------------------------- |
+| `app_id`             | ✅       | —                                   | GitHub App ID                                        |
+| `private_key`        | ✅       | —                                   | GitHub App private key                               |
+| `repositories`       | ❌       | `""`                                | Additional private repositories for current owner    |
+| `php-version`        | ❌       | `8.4`                               | PHP version                                          |
+| `extensions`         | ❌       | `mbstring, xml, ctype, iconv, intl` | PHP extensions                                       |
+| `coverage`           | ❌       | `none`                              | Coverage driver: `none`, `pcov`, or `xdebug`         |
+| `extra_owner`        | ❌       | `""`                                | Optional second owner (organization/user)            |
+| `extra_repositories` | ❌       | `""`                                | Newline-separated repositories for `extra_owner`     |
 
 **Steps performed:**
 
 1. Generates tokens via the **GitHub Token** composite action.
 2. Installs PHP with the requested extensions and coverage driver (`shivammathur/setup-php`).
 3. Caches Composer dependencies.
-4. Configures Git authentication for the current owner and, optionally, one extra owner.
+4. Configures Git authentication for additional private repositories under the current owner and, optionally, one extra owner.
 5. Installs Composer dependencies.
 
 ## Usage

@@ -46,7 +46,7 @@ jobs:
         with:
           app_id: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_ID }}
           private_key: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_PRIVATE_KEY }}
-          repositories: ${{ inputs.composer_repositories != '' && inputs.composer_repositories || inputs.repository }}
+          repositories: ${{ inputs.composer_repositories }}
           coverage: pcov
           extra_owner: ${{ inputs.extra_owner }}
           extra_repositories: ${{ inputs.extra_repositories }}
