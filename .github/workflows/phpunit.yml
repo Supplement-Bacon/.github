@@ -6,6 +6,10 @@ on:
       repository:
         required: true
         type: string
+      composer_repositories:
+        required: true
+        type: string
+        default: ""
       test-args:
         required: false
         type: string
@@ -25,7 +29,6 @@ on:
 
 permissions:
   contents: read
-  actions: write
   actions: write
 
 jobs:
@@ -49,10 +52,11 @@ jobs:
           token: ${{ steps.app-token.outputs.token }}
 
       - name: Setup PHP & Composer
-        uses: Supplement-Bacon/.github/.github/actions/php@main
+        uses: Supplement-Bacon/.github/.github/actions/php@feat/ci-back
         with:
           app_id: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_ID }}
           private_key: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_PRIVATE_KEY }}
+          repositories: ${{ inputs.composer_repositories != '' && format('{0}\n{1}', inputs.repository, inputs.composer_repositories) || inputs.repository }}
           coverage: pcov
           extra_owner: ${{ inputs.extra_owner }}
           extra_repositories: ${{ inputs.extra_repositories }}
@@ -80,19 +84,14 @@ jobs:
     if: github.event_name == 'pull_request' && inputs.run-example-tests != true
     runs-on: ubuntu-latest
     steps:
-      - name: Generate GitHub App token (Supplement-Bacon)
+      - name: Generate GitHub App token
         id: app-token
         uses: actions/create-github-app-token@v1
         with:
           app-id: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_ID }}
           private-key: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_PRIVATE_KEY }}
           owner: ${{ github.repository_owner }}
-          repositories: |
-            ${{ inputs.repository }}
-            table-booking-back-office-api
-            laravel-trivec
-            laravel-paginable
-            laravel-api-toolkit
+          repositories: ${{ inputs.composer_repositories != '' && format('{0}\n{1}', inputs.repository, inputs.composer_repositories) || inputs.repository }}
 
       - name: Generate extra GitHub App token
         if: ${{ inputs.extra_owner != '' && inputs.extra_repositories != '' }}

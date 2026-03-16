@@ -11,7 +11,7 @@ inputs:
   owner:
     required: false
     description: "Owner (organization or user) of the target repositories"
-    default: ${{ github.repository_owner }}
+    default: ""
   repositories:
     required: true
     description: "Newline-separated list of repositories the token should have access to"

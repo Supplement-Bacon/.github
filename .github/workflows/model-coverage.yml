@@ -26,7 +26,7 @@ jobs:
     steps:
       - name: Generate GitHub App token
         id: app-token
-        uses: actions/create-github-app-token@main
+        uses: actions/create-github-app-token@feat/ci-back
         with:
           app-id: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_ID }}
           private-key: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_PRIVATE_KEY }}
@@ -40,10 +40,11 @@ jobs:
           token: ${{ steps.app-token.outputs.token }}
 
       - name: Setup PHP & Composer
-        uses: Supplement-Bacon/.github/.github/actions/php@main
+        uses: Supplement-Bacon/.github/.github/actions/php@feat/ci-back
         with:
           app_id: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_ID }}
           private_key: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_PRIVATE_KEY }}
+          repositories: ${{ inputs.repository }}
           extra_owner: ${{ inputs.extra_owner }}
           extra_repositories: ${{ inputs.extra_repositories }}
 

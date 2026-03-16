@@ -38,15 +38,21 @@ jobs:
           token: ${{ steps.app-token.outputs.token }}
 
       - name: Setup PHP & Composer
-        uses: Supplement-Bacon/.github/.github/actions/php@main
+        uses: Supplement-Bacon/.github/.github/actions/php@feat/ci-back
         with:
           app_id: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_ID }}
           private_key: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_PRIVATE_KEY }}
+          repositories: ${{ inputs.repository }}
           extra_owner: ${{ inputs.extra_owner }}
           extra_repositories: ${{ inputs.extra_repositories }}
 
-      - name: Run Laravel Pint
+      - name: Run Laravel Pint (fix)
+        if: github.event_name == 'pull_request'
         run: ./vendor/bin/pint
+
+      - name: Run Laravel Pint (check only)
+        if: github.event_name != 'pull_request'
+        run: ./vendor/bin/pint --test
 
       - name: Commit changes
         if: github.event_name == 'pull_request'
