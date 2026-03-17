@@ -81,6 +81,9 @@ runs:
         if [ "${{ inputs.repositories }}" != "" ]; then
           git config --global url."https://x-access-token:${{ steps.tokens.outputs.token }}@github.com/${{ github.repository_owner }}/".insteadOf "https://github.com/${{ github.repository_owner }}/"
         fi
+        if [ "${{ inputs.extra_owner }}" != "" ] && [ "${{ inputs.extra_repositories }}" != "" ]; then
+          git config --global url."https://x-access-token:${{ steps.tokens-extra.outputs.token }}@github.com/${{ inputs.extra_owner }}/".insteadOf "https://github.com/${{ inputs.extra_owner }}/"
+        fi
 
     - name: Install Composer dependencies
       shell: bash
