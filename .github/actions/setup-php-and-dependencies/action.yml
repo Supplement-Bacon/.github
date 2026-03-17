@@ -37,7 +37,8 @@ runs:
   using: composite
   steps:
     - name: Generate GitHub App token
-      id: app-token-scoped
+      if: ${{ inputs.repositories != '' }}
+      id: tokens
       uses: actions/create-github-app-token@v1
       with:
         app-id: ${{ inputs.app_id }}
@@ -46,6 +47,7 @@ runs:
         repositories: ${{ inputs.repositories }}
 
     - name: Generate extra GitHub App token
+      if: ${{ inputs.extra_owner != '' && inputs.extra_repositories != '' }}
       id: tokens-extra
       uses: actions/create-github-app-token@v1
       with:
