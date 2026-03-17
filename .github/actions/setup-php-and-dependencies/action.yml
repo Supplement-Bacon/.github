@@ -33,29 +33,24 @@ inputs:
     description: "Newline-separated list of extra repositories (for extra_owner) the token should have access to"
     default: ""
 
-outputs:
-  token:
-    description: "GitHub App token for additional private repositories under the current owner"
-    value: ${{ steps.tokens.outputs.token }}
-
 runs:
   using: composite
   steps:
-    - name: Generate GitHub App tokens
-      id: tokens
-      uses: Supplement-Bacon/.github/.github/actions/github-token@feat/ci-back
+    - name: Generate GitHub App token
+      id: app-token-scoped
+      uses: actions/create-github-app-token@v1
       with:
-        app_id: ${{ inputs.app_id }}
-        private_key: ${{ inputs.private_key }}
-        owner: ${{ github.repository_owner }}
+        app-id: ${{ inputs.app_id }}
+        private-key: ${{ inputs.private_key }}
+        owner: ${{ inputs.owner }}
         repositories: ${{ inputs.repositories }}
 
     - name: Generate extra GitHub App token
       id: tokens-extra
-      uses: Supplement-Bacon/.github/.github/actions/github-token@feat/ci-back
+      uses: actions/create-github-app-token@v1
       with:
-        app_id: ${{ inputs.app_id }}
-        private_key: ${{ inputs.private_key }}
+        app-id: ${{ inputs.app_id }}
+        private-key: ${{ inputs.private_key }}
         owner: ${{ inputs.extra_owner }}
         repositories: ${{ inputs.extra_repositories }}
 
@@ -68,7 +63,7 @@ runs:
         ini-values: ${{ inputs.coverage == 'pcov' && 'pcov.directory=app' || '' }}
 
     - name: Cache Composer dependencies
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: ~/.composer/cache
         key: ${{ runner.os }}-composer-${{ hashFiles('composer.lock') }}
