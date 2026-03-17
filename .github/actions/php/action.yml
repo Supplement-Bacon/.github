@@ -42,9 +42,8 @@ runs:
   using: composite
   steps:
     - name: Generate GitHub App tokens
-      if: ${{ inputs.repositories != '' }}
       id: tokens
-      uses: Supplement-Bacon/.github/.github/actions/github-token@main
+      uses: Supplement-Bacon/.github/.github/actions/github-token@feat/ci-back
       with:
         app_id: ${{ inputs.app_id }}
         private_key: ${{ inputs.private_key }}
@@ -52,9 +51,8 @@ runs:
         repositories: ${{ inputs.repositories }}
 
     - name: Generate extra GitHub App token
-      if: ${{ inputs.extra_owner != '' && inputs.extra_repositories != '' }}
       id: tokens-extra
-      uses: Supplement-Bacon/.github/.github/actions/github-token@main
+      uses: Supplement-Bacon/.github/.github/actions/github-token@feat/ci-back
       with:
         app_id: ${{ inputs.app_id }}
         private_key: ${{ inputs.private_key }}
@@ -82,9 +80,6 @@ runs:
       run: |
         if [ "${{ inputs.repositories }}" != "" ]; then
           git config --global url."https://x-access-token:${{ steps.tokens.outputs.token }}@github.com/${{ github.repository_owner }}/".insteadOf "https://github.com/${{ github.repository_owner }}/"
-        fi
-        if [ "${{ inputs.extra_owner }}" != "" ] && [ "${{ inputs.extra_repositories }}" != "" ]; then
-          git config --global url."https://x-access-token:${{ steps.tokens-extra.outputs.token }}@github.com/${{ inputs.extra_owner }}/".insteadOf "https://github.com/${{ inputs.extra_owner }}/"
         fi
 
     - name: Install Composer dependencies

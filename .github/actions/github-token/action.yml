@@ -25,8 +25,7 @@ outputs:
 runs:
   using: composite
   steps:
-    - name: Generate scoped GitHub App token
-      if: ${{ inputs.repositories != '' }}
+    - name: Generate GitHub App token
       id: app-token-scoped
       uses: actions/create-github-app-token@v1
       with:
@@ -34,12 +33,3 @@ runs:
         private-key: ${{ inputs.private_key }}
         owner: ${{ inputs.owner }}
         repositories: ${{ inputs.repositories }}
-
-    - name: Generate owner GitHub App token
-      if: ${{ inputs.repositories == '' }}
-      id: app-token-owner
-      uses: actions/create-github-app-token@v1
-      with:
-        app-id: ${{ inputs.app_id }}
-        private-key: ${{ inputs.private_key }}
-        owner: ${{ inputs.owner }}
