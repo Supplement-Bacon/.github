@@ -32,7 +32,7 @@ jobs:
           ref: ${{ github.head_ref || github.ref_name }}
 
       - name: Setup PHP & Composer
-        uses: Supplement-Bacon/.github/.github/actions/php@feat/ci-back
+        uses: Supplement-Bacon/.github/.github/actions/setup-php-and-dependencies@feat/ci-back
         with:
           app_id: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_ID }}
           private_key: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_PRIVATE_KEY }}

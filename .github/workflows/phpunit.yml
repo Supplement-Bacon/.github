@@ -42,7 +42,7 @@ jobs:
           ref: ${{ github.head_ref || github.ref_name }}
 
       - name: Setup PHP & Composer
-        uses: Supplement-Bacon/.github/.github/actions/php@feat/ci-back
+        uses: Supplement-Bacon/.github/.github/actions/setup-php-and-dependencies@feat/ci-back
         with:
           app_id: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_ID }}
           private_key: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_PRIVATE_KEY }}
@@ -74,54 +74,20 @@ jobs:
     if: github.event_name == 'pull_request' && inputs.run-example-tests != true
     runs-on: ubuntu-latest
     steps:
-      - name: Generate GitHub App token
-        id: app-token
-        uses: actions/github-token@feat/ci-back
-        with:
-          app-id: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_ID }}
-          private-key: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_PRIVATE_KEY }}
-          owner: ${{ github.repository_owner }}
-
-      - name: Generate extra GitHub App token
-        if: ${{ inputs.extra_owner != '' && inputs.extra_repositories != '' }}
-        id: app-token-extra
-        uses: actions/github-token@feat/ci-back
-        with:
-          app-id: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_ID }}
-          private-key: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_PRIVATE_KEY }}
-          owner: ${{ inputs.extra_owner }}
-          repositories: ${{ inputs.extra_repositories }}
-
-      - name: Checkout base branch
+      - name: Checkout code
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.base.ref }}
+          ref: ${{ github.head_ref || github.ref_name }}
 
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
+      - name: Setup PHP & Composer
+        uses: Supplement-Bacon/.github/.github/actions/setup-php-and-dependencies@feat/ci-back
         with:
-          php-version: "8.4"
-          extensions: mbstring, xml, ctype, iconv, intl
+          app_id: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_ID }}
+          private_key: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_PRIVATE_KEY }}
+          repositories: ${{ inputs.composer_repositories }}
           coverage: pcov
-          ini-values: pcov.directory=app
-
-      - name: Cache Composer dependencies
-        uses: actions/cache@v4
-        with:
-          path: ~/.composer/cache
-          key: ${{ runner.os }}-composer-${{ hashFiles('composer.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-composer-
-
-      - name: Configure Git auth for GitHub
-        run: |
-          git config --global url."https://x-access-token:${{ steps.app-token.outputs.token }}@github.com/${{ github.repository_owner }}/".insteadOf "https://github.com/${{ github.repository_owner }}/"
-          if [ "${{ inputs.extra_owner }}" != "" ] && [ "${{ inputs.extra_repositories }}" != "" ]; then
-            git config --global url."https://x-access-token:${{ steps.app-token-extra.outputs.token }}@github.com/${{ inputs.extra_owner }}/".insteadOf "https://github.com/${{ inputs.extra_owner }}/"
-          fi
-
-      - name: Install Composer dependencies
-        run: composer install --prefer-dist --no-interaction --no-progress --optimize-autoloader
+          extra_owner: ${{ inputs.extra_owner }}
+          extra_repositories: ${{ inputs.extra_repositories }}
 
       - name: Setup Laravel environment
         run: |
