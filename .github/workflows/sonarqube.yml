@@ -18,7 +18,7 @@ jobs:
     steps:
       - name: Generate GitHub App token
         id: app-token
-        uses: actions/create-github-app-token@v1
+        uses: actions/github-token@feat/ci-back
         with:
           app-id: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_ID }}
           private-key: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_PRIVATE_KEY }}
