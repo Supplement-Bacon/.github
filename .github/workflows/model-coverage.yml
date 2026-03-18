@@ -3,8 +3,8 @@ name: Coverage
 on:
   workflow_call:
     inputs:
-      repository:
-        required: true
+      composer_repositories:
+        required: false
         type: string
       extra_owner:
         required: false

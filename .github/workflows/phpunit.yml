@@ -3,9 +3,6 @@ name: PHPUnit
 on:
   workflow_call:
     inputs:
-      repository:
-        required: true
-        type: string
       composer_repositories:
         required: false
         type: string

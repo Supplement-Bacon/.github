@@ -3,9 +3,6 @@ name: Laravel Pint
 on:
   workflow_call:
     inputs:
-      repository:
-        required: true
-        type: string
       composer_repositories:
         required: false
         type: string
