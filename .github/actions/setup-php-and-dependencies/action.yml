@@ -1,0 +1,86 @@
+name: "Setup PHP & Composer"
+description: "Generates a GitHub App token, installs PHP, configures private package auth, and installs Composer dependencies"
+
+inputs:
+  app_id:
+    required: true
+    description: "GitHub App ID for token generation"
+  private_key:
+    required: true
+    description: "GitHub App private key"
+  repositories:
+    required: false
+    description: "Newline-separated list of additional private repositories (same owner) needed during Composer install"
+    default: ""
+  php-version:
+    required: false
+    default: "8.4"
+    description: "PHP version to install"
+  extensions:
+    required: false
+    default: "mbstring, xml, ctype, iconv, intl"
+    description: "PHP extensions to install"
+  coverage:
+    required: false
+    default: "none"
+    description: "Coverage driver: none, pcov, or xdebug"
+  extra_owner:
+    required: false
+    description: "Optional extra owner (organization or user) for additional private repositories"
+    default: ""
+  extra_repositories:
+    required: false
+    description: "Newline-separated list of extra repositories (for extra_owner) the token should have access to"
+    default: ""
+
+runs:
+  using: composite
+  steps:
+    - name: Generate GitHub App token
+      if: ${{ inputs.repositories != '' }}
+      id: tokens
+      uses: actions/create-github-app-token@v3
+      with:
+        app-id: ${{ inputs.app_id }}
+        private-key: ${{ inputs.private_key }}
+        repositories: ${{ inputs.repositories }}
+
+    - name: Generate extra GitHub App token
+      if: ${{ inputs.extra_owner != '' && inputs.extra_repositories != '' }}
+      id: tokens-extra
+      uses: actions/create-github-app-token@v3
+      with:
+        app-id: ${{ inputs.app_id }}
+        private-key: ${{ inputs.private_key }}
+        owner: ${{ inputs.extra_owner }}
+        repositories: ${{ inputs.extra_repositories }}
+
+    - name: Setup PHP ${{ inputs.php-version }}
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: ${{ inputs.php-version }}
+        extensions: ${{ inputs.extensions }}
+        coverage: ${{ inputs.coverage }}
+        ini-values: ${{ inputs.coverage == 'pcov' && 'pcov.directory=app' || '' }}
+
+    - name: Cache Composer dependencies
+      uses: actions/cache@v5
+      with:
+        path: ~/.cache/composer
+        key: ${{ runner.os }}-composer-${{ hashFiles('composer.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-composer-
+
+    - name: Configure Git auth for GitHub
+      shell: bash
+      run: |
+        if [ "${{ inputs.repositories }}" != "" ]; then
+          git config --global url."https://x-access-token:${{ steps.tokens.outputs.token }}@github.com/${{ github.repository_owner }}/".insteadOf "https://github.com/${{ github.repository_owner }}/"
+        fi
+        if [ "${{ inputs.extra_owner }}" != "" ] && [ "${{ inputs.extra_repositories }}" != "" ]; then
+          git config --global url."https://x-access-token:${{ steps.tokens-extra.outputs.token }}@github.com/${{ inputs.extra_owner }}/".insteadOf "https://github.com/${{ inputs.extra_owner }}/"
+        fi
+
+    - name: Install Composer dependencies
+      shell: bash
+      run: composer install --prefer-dist --no-interaction --no-progress --optimize-autoloader

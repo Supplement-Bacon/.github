@@ -1,0 +1,53 @@
+name: Laravel Pint
+
+on:
+  workflow_call:
+    inputs:
+      composer_repositories:
+        required: false
+        type: string
+        default: ""
+      extra_owner:
+        required: false
+        type: string
+        default: ""
+      extra_repositories:
+        required: false
+        type: string
+        default: ""
+
+permissions:
+  contents: write
+
+jobs:
+  laravel-pint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.head_ref || github.ref_name }}
+
+      - name: Setup PHP & Composer
+        uses: Supplement-Bacon/.github/.github/actions/setup-php-and-dependencies@feat/ci-back
+        with:
+          app_id: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_ID }}
+          private_key: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_PRIVATE_KEY }}
+          repositories: ${{ inputs.composer_repositories }}
+          extra_owner: ${{ inputs.extra_owner }}
+          extra_repositories: ${{ inputs.extra_repositories }}
+
+      - name: Run Laravel Pint (fix)
+        if: github.event_name == 'pull_request'
+        run: ./vendor/bin/pint
+
+      - name: Run Laravel Pint (check only)
+        if: github.event_name != 'pull_request'
+        run: ./vendor/bin/pint --test
+
+      - name: Commit changes
+        if: github.event_name == 'pull_request'
+        uses: stefanzweifel/git-auto-commit-action@v7
+        with:
+          commit_message: "style: fix code formatting with Laravel Pint"
+          branch: ${{ github.head_ref }}
