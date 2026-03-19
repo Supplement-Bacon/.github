@@ -6,6 +6,9 @@ on:
       environment:
         required: true
         type: string
+      DOMAIN:
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -19,11 +22,6 @@ jobs:
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
     steps:
-      - name: Add known hosts
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_KNOWN_HOSTS }}" >> ~/.ssh/known_hosts
-
       - name: Setup SSH
         uses: webfactory/ssh-agent@v0.10.0
         with:
