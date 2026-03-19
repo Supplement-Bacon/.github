@@ -10,8 +10,6 @@ on:
         required: true
         type: string
     secrets:
-      FORGE_API_TOKEN:
-        required: true
       DOMAIN:
         required: true
 
