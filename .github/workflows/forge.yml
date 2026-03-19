@@ -6,9 +6,6 @@ on:
       environment:
         required: true
         type: string
-      DOMAIN:
-        required: true
-        type: string
 
 permissions:
   contents: read
@@ -27,7 +24,7 @@ jobs:
         run: |
           site_id=$(curl -sS -H "Authorization: Bearer ${FORGE_API_TOKEN}" \
             "https://forge.laravel.com/api/v1/servers" | \
-            jq -r ".servers[] | select(.name | contains(\"${{ inputs.DOMAIN }}\")) | .id")
+            jq -r ".servers[] | select(.name | contains(\"${{ secrets.P_DOMAIN }}\")) | .id")
           echo "site_id=${site_id}" >> $GITHUB_OUTPUT
         env:
           FORGE_API_TOKEN: ${{ secrets.FORGE_API_TOKEN }}
