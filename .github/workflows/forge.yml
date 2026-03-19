@@ -6,9 +6,9 @@ on:
       environment:
         required: true
         type: string
-    secrets:
       DOMAIN:
         required: true
+        type: string
 
 permissions:
   contents: read
