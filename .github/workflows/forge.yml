@@ -9,6 +9,9 @@ on:
       DOMAIN:
         required: true
         type: string
+      SSH_PRIVATE_KEY:
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -25,7 +28,7 @@ jobs:
       - name: Setup SSH
         uses: webfactory/ssh-agent@v0.10.0
         with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+          ssh-private-key: ${{ inputs.SSH_PRIVATE_KEY }}
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -38,6 +41,6 @@ jobs:
         run: composer global require laravel/forge-cli
 
       - name: Deploy
-        run: forge deploy ${{ secrets.DOMAIN }}
+        run: forge deploy ${{ inputs.DOMAIN }}
         env:
           FORGE_API_TOKEN: ${{ secrets.FORGE_API_TOKEN }}
