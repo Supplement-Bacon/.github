@@ -12,6 +12,8 @@ on:
     secrets:
       FORGE_API_TOKEN:
         required: true
+      DOMAIN:
+        required: true
 
 permissions:
   contents: read
@@ -25,13 +27,20 @@ jobs:
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
     steps:
+      - name: Get site_id from domain
+        id: get-site-id
+        run: |
+          site_id=$(curl -sS -H "Authorization: Bearer ${FORGE_API_TOKEN}" \
+            "https://forge.laravel.com/api/v1/servers" | \
+            jq -r ".servers[] | select(.name | contains(\"${{ inputs.DOMAIN }}\")) | .id")
+          echo "site_id=${site_id}" >> $GITHUB_OUTPUT
+        env:
+          FORGE_API_TOKEN: ${{ secrets.FORGE_API_TOKEN }}
+
       - name: Trigger deploy via Forge API
         run: |
-          set -euo pipefail
-
-          response=$(curl -sS -w "\n%{http_code}" -X POST "https://forge.laravel.com/api/v1/sites/${{ inputs.site_id }}/deployment/deploy" \
+          curl -sS -X POST "https://forge.laravel.com/api/v1/sites/${{ steps.get-site-id.outputs.site_id }}/deployment/deploy" \
             -H "Authorization: Bearer ${FORGE_API_TOKEN}" \
-            -H "Accept: application/json" \
-            -H "Content-Type: application/json")
+            -H "Accept: application/json"
         env:
           FORGE_API_TOKEN: ${{ secrets.FORGE_API_TOKEN }}
