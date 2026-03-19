@@ -6,6 +6,10 @@ on:
       environment:
         required: true
         type: string
+      client:
+        required: false
+        type: string
+        default: ""
 
 permissions:
   contents: read
@@ -24,10 +28,11 @@ jobs:
         run: |
           site_id=$(curl -sS -H "Authorization: Bearer ${FORGE_API_TOKEN}" \
             "https://forge.laravel.com/api/v1/servers" | \
-            jq -r ".servers[] | select(.name | contains(\"${{ secrets.P_DOMAIN }}\")) | .id")
+            jq -r ".servers[] | select(.name | contains(\"${DOMAIN}\")) | .id")
           echo "site_id=${site_id}" >> $GITHUB_OUTPUT
         env:
           FORGE_API_TOKEN: ${{ secrets.FORGE_API_TOKEN }}
+          DOMAIN: ${{ secrets[format('{0}_DOMAIN', inputs.client)] }}
 
       - name: Trigger deploy via Forge API
         run: |
