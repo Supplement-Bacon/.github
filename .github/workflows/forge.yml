@@ -6,12 +6,12 @@ on:
       environment:
         required: true
         type: string
-      DOMAIN:
+      site_id:
         required: true
         type: string
-      SSH_PRIVATE_KEY:
+    secrets:
+      FORGE_API_TOKEN:
         required: true
-        type: string
 
 permissions:
   contents: read
@@ -25,22 +25,13 @@ jobs:
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
     steps:
-      - name: Setup SSH
-        uses: webfactory/ssh-agent@v0.10.0
-        with:
-          ssh-private-key: ${{ inputs.SSH_PRIVATE_KEY }}
+      - name: Trigger deploy via Forge API
+        run: |
+          set -euo pipefail
 
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: 8.4
-          tools: composer:v2
-          coverage: none
-
-      - name: Install Forge CLI
-        run: composer global require laravel/forge-cli
-
-      - name: Deploy
-        run: forge deploy ${{ inputs.DOMAIN }}
+          response=$(curl -sS -w "\n%{http_code}" -X POST "https://forge.laravel.com/api/v1/sites/${{ inputs.site_id }}/deployment/deploy" \
+            -H "Authorization: Bearer ${FORGE_API_TOKEN}" \
+            -H "Accept: application/json" \
+            -H "Content-Type: application/json")
         env:
           FORGE_API_TOKEN: ${{ secrets.FORGE_API_TOKEN }}
