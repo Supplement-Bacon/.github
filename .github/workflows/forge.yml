@@ -32,6 +32,6 @@ jobs:
       - name: Deploy
         run: |
           forge server:switch ${{ secrets.SERVER_ID }}
-          forge deploy ${{ secrets.DOMAIN }}
+          forge deploy ${{ secrets.SITE_ID }}
         env:
           FORGE_API_TOKEN: ${{ secrets.FORGE_API_TOKEN }}
