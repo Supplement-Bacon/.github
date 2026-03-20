@@ -35,6 +35,6 @@ jobs:
       - name: Deploy
         run: |
           forge server:switch ${{ secrets.SERVER_ID }}
-          forge deploy ${{ secrets[format('{0}_SITE_ID', inputs.client)] }} --wait
+          forge deploy ${{ secrets[format('{0}_SITE_ID', inputs.client)] }}
         env:
           FORGE_API_TOKEN: ${{ secrets.FORGE_API_TOKEN }}
