@@ -6,6 +6,9 @@ on:
       environment:
         required: true
         type: string
+      client:
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -22,7 +25,7 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: 8.4
+          php-version: 8.3
           tools: composer:v2
           coverage: none
 
@@ -30,6 +33,9 @@ jobs:
         run: composer global require laravel/forge-cli
 
       - name: Deploy
-        run: forge deploy ${{ secrets.DOMAIN }}
+        run: |
+          forge server:switch ${{ secrets.SERVER_ID }}
+          forge deploy ${DOMAIN}
         env:
           FORGE_API_TOKEN: ${{ secrets.FORGE_API_TOKEN }}
+          DOMAIN: ${{ secrets[format('{0}_DOMAIN', inputs.client)] }}
