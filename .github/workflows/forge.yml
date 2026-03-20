@@ -7,8 +7,9 @@ on:
         required: true
         type: string
       client:
-        required: true
+        required: false
         type: string
+        default: ""
 
 permissions:
   contents: read
@@ -35,6 +36,6 @@ jobs:
       - name: Deploy
         run: |
           forge server:switch ${{ secrets.SERVER_ID }}
-          forge deploy ${{ secrets[format('{0}_DOMAIN', inputs.client)] }}
+          forge deploy ${{ inputs.client != '' && secrets[format('{0}_DOMAIN', inputs.client)] || secrets.DOMAIN }}
         env:
           FORGE_API_TOKEN: ${{ secrets.FORGE_API_TOKEN }}
