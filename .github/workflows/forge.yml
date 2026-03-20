@@ -6,10 +6,6 @@ on:
       environment:
         required: true
         type: string
-      client:
-        required: false
-        type: string
-        default: ""
 
 permissions:
   contents: read
@@ -23,21 +19,17 @@ jobs:
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
     steps:
-      - name: Get site_id from domain
-        id: get-site-id
-        run: |
-          site_id=$(curl -sS -H "Authorization: Bearer ${FORGE_API_TOKEN}" \
-            "https://forge.laravel.com/api/v1/servers" | \
-            jq -r ".servers[] | select(.name | contains(\"${DOMAIN}\")) | .id")
-          echo "site_id=${site_id}" >> $GITHUB_OUTPUT
-        env:
-          FORGE_API_TOKEN: ${{ secrets.FORGE_API_TOKEN }}
-          DOMAIN: ${{ secrets[format('{0}_DOMAIN', inputs.client)] }}
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: 8.4
+          tools: composer:v2
+          coverage: none
 
-      - name: Trigger deploy via Forge API
-        run: |
-          curl -sS -X POST "https://forge.laravel.com/api/v1/sites/${{ steps.get-site-id.outputs.site_id }}/deployment/deploy" \
-            -H "Authorization: Bearer ${FORGE_API_TOKEN}" \
-            -H "Accept: application/json"
+      - name: Install Forge CLI
+        run: composer global require laravel/forge-cli
+
+      - name: Deploy
+        run: forge deploy ${{ secrets.DOMAIN }}
         env:
           FORGE_API_TOKEN: ${{ secrets.FORGE_API_TOKEN }}
