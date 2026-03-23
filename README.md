@@ -102,12 +102,12 @@ Triggers a deployment through [Laravel Forge](https://forge.laravel.com/).
 
 **Secrets required:**
 
-| Secret            | Description                                                           |
-| ----------------- | --------------------------------------------------------------------- |
-| `FORGE_API_TOKEN` | Laravel Forge API token                                               |
-| `SERVER_ID`       | Forge server ID used by `forge server:switch`                         |
-| `DOMAIN`          | Default domain deployed when `client` is empty                        |
-| `<CLIENT>_DOMAIN` | Optional client-specific domain secret (example: `P_DOMAIN`)          |
+| Secret            | Description                                                  |
+| ----------------- | ------------------------------------------------------------ |
+| `FORGE_API_TOKEN` | Laravel Forge API token                                      |
+| `SERVER_ID`       | Forge server ID used by `forge server:switch`                |
+| `DOMAIN`          | Default domain deployed when `client` is empty               |
+| `<CLIENT>_DOMAIN` | Optional client-specific domain secret (example: `P_DOMAIN`) |
 
 The deployment does:
 
@@ -159,47 +159,22 @@ All-in-one action that sets up a complete PHP environment.
 4. Configures Git authentication for additional private repositories under the current owner and, optionally, one extra owner.
 5. Installs Composer dependencies.
 
+on:
+jobs:
+
 ## Usage
 
-From any repository in the organization, call a reusable workflow:
+### Calling the deployment workflow (forge.yml) from another workflow
+
+To use the deployment workflow in an application pipeline, add a job like this:
 
 ```yaml
-# .github/workflows/ci.yml
-name: CI
-
-on:
-  push:
-    branches: [main]
-  pull_request:
-
 jobs:
-  lint:
-    uses: Supplement-Bacon/.github/.github/workflows/laravel-pint.yml@main
-    secrets: inherit
-    with:
-      composer_repositories: |
-        laravel-trivec
-        laravel-paginable
-        laravel-api-toolkit
-
-  test:
-    uses: Supplement-Bacon/.github/.github/workflows/phpunit.yml@main
-    secrets: inherit
-    with:
-      composer_repositories: |
-        laravel-trivec
-        laravel-paginable
-        laravel-api-toolkit
-      test-args: "--parallel --processes=4 --colors=never"
-
-  sonar:
-    needs: test
-    uses: Supplement-Bacon/.github/.github/workflows/sonarqube.yml@main
-    secrets: inherit
-
   deploy:
     needs: [lint, test, sonar]
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/main')
+    if: |
+      (github.event_name == 'push' && (github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/main')) || 
+      (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && github.event.inputs.confirmation == 'deploy')
     uses: Supplement-Bacon/.github/.github/workflows/forge.yml@main
     secrets:
       FORGE_API_TOKEN: ${{ secrets.FORGE_API_TOKEN }}
@@ -207,23 +182,57 @@ jobs:
       DOMAIN: ${{ secrets.DOMAIN }}
     with:
       environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
-      # Optional: if set to "P", workflow uses secret P_DOMAIN instead of DOMAIN
+      # Optional: if set to "P", the workflow will use the secret P_DOMAIN instead of DOMAIN
       client: ""
 ```
+
+### Manual trigger with confirmation
+
+To display the confirmation field when running the workflow manually ("Run workflow" button), declare the input in your main workflow:
+
+```yaml
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: ["**"]
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: "Type deploy to run production deployment"
+        required: true
+        type: string
+```
+
+The deploy job should then check the confirmation value:
+
+```yaml
+if: |
+  (github.event_name == 'push' && (github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/main')) || 
+  (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && github.event.inputs.confirmation == 'deploy')
+```
+
+**Result:**
+
+- On push to main/dev: automatic deployment
+- On "Run workflow" (main branch): a confirmation field appears, you must type `deploy` to trigger deployment
+
+**Note:**
+The confirmation input must be defined in the main workflow (pipeline), not in the reusable workflow (forge.yml).
 
 ## Required Secrets
 
 The following secrets must be configured at organization level or in the calling repository:
 
-| Secret                                    | Used by                          | Description                             |
-| ----------------------------------------- | -------------------------------- | --------------------------------------- |
-| `BACKEND_CI_DEPENDENCIES_APP_ID`          | Laravel Pint, PHPUnit            | GitHub App ID used for token generation |
-| `BACKEND_CI_DEPENDENCIES_APP_PRIVATE_KEY` | Laravel Pint, PHPUnit            | GitHub App private key                  |
-| `SONAR_TOKEN`                             | SonarQube                        | SonarCloud authentication token         |
-| `FORGE_API_TOKEN`                         | Deploy (Forge)                   | Laravel Forge API token                 |
-| `SERVER_ID`                               | Deploy (Forge)                   | Forge server ID for CLI context switch  |
-| `DOMAIN`                                  | Deploy (Forge)                   | Default site domain for deploy          |
-| `<CLIENT>_DOMAIN`                         | Deploy (Forge)                   | Optional client-specific site domain    |
+| Secret                                    | Used by               | Description                             |
+| ----------------------------------------- | --------------------- | --------------------------------------- |
+| `BACKEND_CI_DEPENDENCIES_APP_ID`          | Laravel Pint, PHPUnit | GitHub App ID used for token generation |
+| `BACKEND_CI_DEPENDENCIES_APP_PRIVATE_KEY` | Laravel Pint, PHPUnit | GitHub App private key                  |
+| `SONAR_TOKEN`                             | SonarQube             | SonarCloud authentication token         |
+| `FORGE_API_TOKEN`                         | Deploy (Forge)        | Laravel Forge API token                 |
+| `SERVER_ID`                               | Deploy (Forge)        | Forge server ID for CLI context switch  |
+| `DOMAIN`                                  | Deploy (Forge)        | Default site domain for deploy          |
+| `<CLIENT>_DOMAIN`                         | Deploy (Forge)        | Optional client-specific site domain    |
 
 > **Deploy secrets scope:** `SERVER_ID`, `DOMAIN`, and optional `<CLIENT>_DOMAIN` secrets should be defined on each GitHub Environment (for example `production`, `staging`).
 

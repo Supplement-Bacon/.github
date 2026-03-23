@@ -15,7 +15,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: forge-deploy-${{ inputs.environment }}
+  group: forge-deploy-${{ inputs.client != '' && inputs.client || 'default' }}-${{ inputs.environment }}
   cancel-in-progress: true
 
 jobs:
