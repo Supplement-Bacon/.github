@@ -10,18 +10,27 @@ on:
         required: false
         type: string
         default: ""
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: "Type deploy to run production deployment"
+        required: true
+        type: string
 
 permissions:
   contents: read
 
 concurrency:
-  group: forge-deploy-${{ inputs.environment }}
+  group: forge-deploy-${{ github.event_name == 'workflow_call' && inputs.environment || 'production' }}
   cancel-in-progress: true
 
 jobs:
   forge:
     runs-on: ubuntu-latest
-    environment: ${{ inputs.environment }}
+    if: |
+      github.event_name == 'workflow_call' ||
+      (github.event_name == 'workflow_dispatch' && github.ref_name == 'main' && github.event.inputs.confirmation == 'deploy')
+    environment: ${{ github.event_name == 'workflow_call' && inputs.environment || 'production' }}
     steps:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
