@@ -111,10 +111,10 @@ Triggers a deployment through [Laravel Forge](https://forge.laravel.com/).
 
 The deployment does:
 
-1. `forge server:switch $SERVER_ID`
+1. `forge server:switch forge server:switch ${{ inputs.client != '' && secrets[format('{0}_SERVER_ID', inputs.client)] || secrets.SERVER_ID }}`
 2. `forge deploy ${{ inputs.client != '' && secrets[format('{0}_DOMAIN', inputs.client)] || secrets.DOMAIN }}`
 
-So if `client` is set, it uses `<CLIENT>_DOMAIN`; otherwise it falls back to `DOMAIN`.
+So if `client` is set, it uses `<CLIENT>_DOMAIN`; otherwise it falls back to `DOMAIN`. The same applies to `SERVER_ID`.
 
 ### Frontend Lib CI
 
@@ -176,10 +176,6 @@ jobs:
       (github.event_name == 'push' && (github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/main')) || 
       (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && github.event.inputs.confirmation == 'deploy')
     uses: Supplement-Bacon/.github/.github/workflows/forge.yml@main
-    secrets:
-      FORGE_API_TOKEN: ${{ secrets.FORGE_API_TOKEN }}
-      SERVER_ID: ${{ secrets.SERVER_ID }}
-      DOMAIN: ${{ secrets.DOMAIN }}
     with:
       environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
       # Optional: if set to "P", the workflow will use the secret P_DOMAIN instead of DOMAIN
