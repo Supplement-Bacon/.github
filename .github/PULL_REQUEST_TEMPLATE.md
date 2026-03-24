@@ -1,4 +1,4 @@
-## Description
+# Description
 
 <!--
 Please do not leave this blank
@@ -26,6 +26,8 @@ Please use this format link issue numbers: Fixes X
 https://docs.github.com/en/free-pro-team@latest/github/managing-your-work-on-github/linking-a-pull-request-to-an-issue#linking-a-pull-request-to-an-issue-using-a-keyword
 -->
 
+Fixes #<issue-number>
+
 ## Checklist before requesting a review
 
 - [ ] I have performed a self-review of my code
@@ -34,7 +36,7 @@ https://docs.github.com/en/free-pro-team@latest/github/managing-your-work-on-git
 
 ## [optional] Are there any post-deployment tasks we need to perform?
 
-## [optional] What gif best describes this PR or how it makes you feel?
+## What gif best describes this PR or how it makes you feel?
 
 <!--
  Find the best GIF at https://giphy.com
