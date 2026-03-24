@@ -229,8 +229,9 @@ The following secrets must be configured at organization level or in the calling
 | `SERVER_ID`                               | Deploy (Forge)        | Forge server ID for CLI context switch  |
 | `DOMAIN`                                  | Deploy (Forge)        | Default site domain for deploy          |
 | `<CLIENT>_DOMAIN`                         | Deploy (Forge)        | Optional client-specific site domain    |
+| `<CLIENT>_SERVER_ID`                      | Deploy (Forge)        | Optional client-specific server id      |
 
-> **Deploy secrets scope:** `SERVER_ID`, `DOMAIN`, and optional `<CLIENT>_DOMAIN` secrets should be defined on each GitHub Environment (for example `production`, `staging`).
+> **Deploy secrets scope:** `SERVER_ID`, `DOMAIN`, and optional `<CLIENT>_DOMAIN`, `<CLIENT>_SERVER_ID` secrets should be defined on each GitHub Environment (for example `production`, `staging`).
 
 ---
 
