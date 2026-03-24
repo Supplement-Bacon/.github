@@ -36,9 +36,7 @@ Fixes #<issue-number>
 
 ## [optional] Are there any post-deployment tasks we need to perform?
 
-## [optional] What gif best describes this PR or how it makes you feel?
-
-![ALT_TEXT](GIF_LINK)
+## What gif best describes this PR or how it makes you feel?
 
 <!--
  Find the best GIF at https://giphy.com
