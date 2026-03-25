@@ -15,6 +15,10 @@ on:
         required: false
         type: boolean
         default: false
+      run-phpunit-coverage:
+        required: false
+        type: boolean
+        default: true
       extra_owner:
         required: false
         type: string
@@ -68,7 +72,7 @@ jobs:
           retention-days: 1
 
   phpunit-coverage:
-    if: github.event_name == 'pull_request' && inputs.run-example-tests != true
+    if: github.event_name == 'pull_request' && inputs.run-example-tests != true && inputs.run-phpunit-coverage == true
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
