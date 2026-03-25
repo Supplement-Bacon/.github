@@ -108,6 +108,7 @@ Triggers a deployment through [Laravel Forge](https://forge.laravel.com/).
 | `SERVER_ID`       | Forge server ID used by `forge server:switch`                |
 | `DOMAIN`          | Default domain deployed when `client` is empty               |
 | `<CLIENT>_DOMAIN` | Optional client-specific domain secret (example: `P_DOMAIN`) |
+| `<SERVER>_DOMAIN` | Optional client-specific domain secret (example: `P_SERVER`) |
 
 The deployment does:
 
