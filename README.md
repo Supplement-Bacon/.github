@@ -102,13 +102,13 @@ Triggers a deployment through [Laravel Forge](https://forge.laravel.com/).
 
 **Secrets required:**
 
-| Secret               | Description                                                     |
-| -------------------- | --------------------------------------------------------------- |
-| `FORGE_API_TOKEN`    | Laravel Forge API token                                         |
-| `SERVER_ID`          | Forge server ID used by `forge server:switch`                   |
-| `DOMAIN`             | Default domain deployed when `client` is empty                  |
-| `<CLIENT>_DOMAIN`    | Optional client-specific domain secret (example: `P_DOMAIN`)    |
-| `<CLIENT>_SERVER_ID` | Optional client-specific domain secret (example: `P_SERVER_ID`) |
+| Secret               | Description                                                        |
+| -------------------- | ------------------------------------------------------------------ |
+| `FORGE_API_TOKEN`    | Laravel Forge API token                                            |
+| `SERVER_ID`          | Forge server ID used by `forge server:switch`                      |
+| `DOMAIN`             | Default domain deployed when `client` is empty                     |
+| `<CLIENT>_DOMAIN`    | Optional client-specific domain secret (example: `P_DOMAIN`)       |
+| `<CLIENT>_SERVER_ID` | Optional client-specific server id secret (example: `P_SERVER_ID`) |
 
 The deployment does:
 
