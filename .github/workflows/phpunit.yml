@@ -64,10 +64,14 @@ jobs:
           extra_repositories: ${{ inputs.extra_repositories }}
 
       - name: Setup Laravel environment
-        if: inputs.package != true
         run: |
-          cp .env.example .env
-          php artisan key:generate
+          if [ "${{ inputs.package }}" = "true" ]; then
+            # Package (Testbench) : un .env vide suffit — évite les warnings Dotenv par test
+            [ -f .env ] || touch .env
+          else
+            cp .env.example .env
+            php artisan key:generate
+          fi
 
       - name: Run tests with coverage
         run: |
@@ -108,10 +112,14 @@ jobs:
           extra_repositories: ${{ inputs.extra_repositories }}
 
       - name: Setup Laravel environment
-        if: inputs.package != true
         run: |
-          cp .env.example .env
-          php artisan key:generate
+          if [ "${{ inputs.package }}" = "true" ]; then
+            # Package (Testbench) : un .env vide suffit — évite les warnings Dotenv par test
+            [ -f .env ] || touch .env
+          else
+            cp .env.example .env
+            php artisan key:generate
+          fi
 
       - name: Run tests with coverage on base branch
         continue-on-error: true
