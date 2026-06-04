@@ -19,6 +19,16 @@ on:
         required: false
         type: boolean
         default: true
+      package:
+        required: false
+        type: boolean
+        default: false
+        description: "Set to true for Composer packages (Testbench): skips the Laravel env setup and runs vendor/bin/testbench package:test instead of php artisan test"
+      pcov_directory:
+        required: false
+        type: string
+        default: "app"
+        description: "Directory pcov should instrument (e.g. src for packages)"
       extra_owner:
         required: false
         type: string
@@ -43,16 +53,18 @@ jobs:
           ref: ${{ github.head_ref || github.ref_name }}
 
       - name: Setup PHP & Composer
-        uses: Supplement-Bacon/.github/.github/actions/setup-php-and-dependencies@v2
+        uses: Supplement-Bacon/.github/.github/actions/setup-php-and-dependencies@v3
         with:
           app_id: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_ID }}
           private_key: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_PRIVATE_KEY }}
           repositories: ${{ inputs.composer_repositories }}
           coverage: pcov
+          pcov_directory: ${{ inputs.pcov_directory }}
           extra_owner: ${{ inputs.extra_owner }}
           extra_repositories: ${{ inputs.extra_repositories }}
 
       - name: Setup Laravel environment
+        if: inputs.package != true
         run: |
           cp .env.example .env
           php artisan key:generate
@@ -61,7 +73,11 @@ jobs:
         run: |
           set -o pipefail
           COVERAGE_ARGS=$(echo "${{ inputs.test-args }}" | sed -E 's/--parallel[[:space:]]*//g; s/--processes=[0-9]+[[:space:]]*//g')
-          php artisan test $COVERAGE_ARGS --coverage-clover=coverage.xml
+          if [ "${{ inputs.package }}" = "true" ]; then
+            vendor/bin/testbench package:test $COVERAGE_ARGS --coverage-clover=coverage.xml
+          else
+            php artisan test $COVERAGE_ARGS --coverage-clover=coverage.xml
+          fi
 
       - name: Upload coverage report
         if: always()
@@ -81,16 +97,18 @@ jobs:
           ref: ${{ github.head_ref || github.ref_name }}
 
       - name: Setup PHP & Composer
-        uses: Supplement-Bacon/.github/.github/actions/setup-php-and-dependencies@v2
+        uses: Supplement-Bacon/.github/.github/actions/setup-php-and-dependencies@v3
         with:
           app_id: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_ID }}
           private_key: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_PRIVATE_KEY }}
           repositories: ${{ inputs.composer_repositories }}
           coverage: pcov
+          pcov_directory: ${{ inputs.pcov_directory }}
           extra_owner: ${{ inputs.extra_owner }}
           extra_repositories: ${{ inputs.extra_repositories }}
 
       - name: Setup Laravel environment
+        if: inputs.package != true
         run: |
           cp .env.example .env
           php artisan key:generate
@@ -100,7 +118,11 @@ jobs:
         run: |
           set -o pipefail
           COVERAGE_ARGS=$(echo "${{ inputs.test-args }}" | sed -E 's/--parallel[[:space:]]*//g; s/--processes=[0-9]+[[:space:]]*//g')
-          php artisan test $COVERAGE_ARGS --coverage-clover=coverage-base.xml
+          if [ "${{ inputs.package }}" = "true" ]; then
+            vendor/bin/testbench package:test $COVERAGE_ARGS --coverage-clover=coverage-base.xml
+          else
+            php artisan test $COVERAGE_ARGS --coverage-clover=coverage-base.xml
+          fi
 
       - name: Fallback — empty coverage file if tests crashed
         if: always()

@@ -24,6 +24,10 @@ inputs:
     required: false
     default: "none"
     description: "Coverage driver: none, pcov, or xdebug"
+  pcov_directory:
+    required: false
+    default: "app"
+    description: "Directory pcov should instrument when coverage is pcov (e.g. src for packages)"
   extra_owner:
     required: false
     description: "Optional extra owner (organization or user) for additional private repositories"
@@ -61,7 +65,7 @@ runs:
         php-version: ${{ inputs.php-version }}
         extensions: ${{ inputs.extensions }}
         coverage: ${{ inputs.coverage }}
-        ini-values: ${{ inputs.coverage == 'pcov' && 'pcov.directory=app' || '' }}
+        ini-values: ${{ inputs.coverage == 'pcov' && format('pcov.directory={0}', inputs.pcov_directory) || '' }}
 
     - name: Cache Composer dependencies
       uses: actions/cache@v5
