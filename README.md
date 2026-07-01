@@ -105,6 +105,7 @@ Triggers a deployment through [Laravel Forge](https://forge.laravel.com/).
 | Secret               | Description                                                        |
 | -------------------- | ------------------------------------------------------------------ |
 | `FORGE_API_TOKEN`    | Laravel Forge API token                                            |
+| `FORGE_ORGANIZATION` | Forge organization slug used by `forge organization:switch`        |
 | `SERVER_ID`          | Forge server ID used by `forge server:switch`                      |
 | `DOMAIN`             | Default domain deployed when `client` is empty                     |
 | `<CLIENT>_DOMAIN`    | Optional client-specific domain secret (example: `P_DOMAIN`)       |
@@ -112,10 +113,13 @@ Triggers a deployment through [Laravel Forge](https://forge.laravel.com/).
 
 The deployment does:
 
-1. `forge server:switch forge server:switch ${{ inputs.client != '' && secrets[format('{0}_SERVER_ID', inputs.client)] || secrets.SERVER_ID }}`
-2. `forge deploy ${{ inputs.client != '' && secrets[format('{0}_DOMAIN', inputs.client)] || secrets.DOMAIN }}`
+1. `forge organization:switch ${{ secrets.FORGE_ORGANIZATION }}`
+2. `forge server:switch ${{ inputs.client != '' && secrets[format('{0}_SERVER_ID', inputs.client)] || secrets.SERVER_ID }}`
+3. `forge deploy ${{ inputs.client != '' && secrets[format('{0}_DOMAIN', inputs.client)] || secrets.DOMAIN }}`
 
 So if `client` is set, it uses `<CLIENT>_DOMAIN`; otherwise it falls back to `DOMAIN`. The same applies to `SERVER_ID`.
+
+> **Forge CLI v2:** the CLI is organization-scoped, so an organization must be selected (`forge organization:switch`) before switching server. Get the slug from `forge organization:list`.
 
 ### Frontend Lib CI
 
@@ -227,6 +231,7 @@ The following secrets must be configured at organization level or in the calling
 | `BACKEND_CI_DEPENDENCIES_APP_PRIVATE_KEY` | Laravel Pint, PHPUnit | GitHub App private key                  |
 | `SONAR_TOKEN`                             | SonarQube             | SonarCloud authentication token         |
 | `FORGE_API_TOKEN`                         | Deploy (Forge)        | Laravel Forge API token                 |
+| `FORGE_ORGANIZATION`                      | Deploy (Forge)        | Forge organization slug (CLI v2)        |
 | `SERVER_ID`                               | Deploy (Forge)        | Forge server ID for CLI context switch  |
 | `DOMAIN`                                  | Deploy (Forge)        | Default site domain for deploy          |
 | `<CLIENT>_DOMAIN`                         | Deploy (Forge)        | Optional client-specific site domain    |

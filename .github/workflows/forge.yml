@@ -22,6 +22,8 @@ jobs:
   forge:
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
+    env:
+      FORGE_API_TOKEN: ${{ secrets.FORGE_API_TOKEN }}
     steps:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -33,9 +35,11 @@ jobs:
       - name: Install Forge CLI
         run: composer global require laravel/forge-cli
 
+      - name: Switch organization
+        run: forge organization:switch ${{ secrets.FORGE_ORGANIZATION }}
+
+      - name: Switch server
+        run: forge server:switch ${{ inputs.client != '' && secrets[format('{0}_SERVER_ID', inputs.client)] || secrets.SERVER_ID }}
+
       - name: Deploy
-        run: |
-          forge server:switch ${{ inputs.client != '' && secrets[format('{0}_SERVER_ID', inputs.client)] || secrets.SERVER_ID }}
-          forge deploy ${{ inputs.client != '' && secrets[format('{0}_DOMAIN', inputs.client)] || secrets.DOMAIN }}
-        env:
-          FORGE_API_TOKEN: ${{ secrets.FORGE_API_TOKEN }}
+        run: forge deploy ${{ inputs.client != '' && secrets[format('{0}_DOMAIN', inputs.client)] || secrets.DOMAIN }}
