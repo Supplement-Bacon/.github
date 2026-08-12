@@ -38,15 +38,25 @@ jobs:
           extra_owner: ${{ inputs.extra_owner }}
           extra_repositories: ${{ inputs.extra_repositories }}
 
+      # The command exits non-zero as soon as a model has no factory, which is
+      # exactly when the report is worth posting. Kept in its own step so the
+      # `bash -e` abort cannot skip the capture below, and so the exit code
+      # stays readable through `steps.factory_coverage_run.outcome`.
       - name: Run Factory Coverage command
-        id: factory_coverage
+        id: factory_coverage_run
         continue-on-error: true
-        run: |
-          php vendor/bin/testbench model:factory-coverage --markdown > factory-coverage.txt
+        run: php vendor/bin/testbench model:factory-coverage --markdown > factory-coverage.txt
 
-          echo "coverage<<EOF" >> $GITHUB_OUTPUT
-          cat factory-coverage.txt >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+      - name: Expose coverage report
+        id: factory_coverage
+        run: |
+          if [ ! -s factory-coverage.txt ]; then
+            echo "⚠️ The factory coverage command produced no output (outcome: ${{ steps.factory_coverage_run.outcome }}). See the job logs." > factory-coverage.txt
+          fi
+
+          echo "coverage<<EOF" >> "$GITHUB_OUTPUT"
+          cat factory-coverage.txt >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
 
       - name: Comment PR
         if: github.event_name == 'pull_request'
