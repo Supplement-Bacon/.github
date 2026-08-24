@@ -1,0 +1,64 @@
+# Validates the calling repository's CODEOWNERS file.
+#
+# Call it from a repository's pipeline.yml:
+#
+#   codeowners:
+#     uses: Supplement-Bacon/.github/.github/workflows/codeowners-validation.yml@v3
+#
+# Why it exists: a syntax error makes CODEOWNERS ENTIRELY inert, and GitHub only
+# surfaces the error in a tab of the web UI. Without this guard, the org rulesets
+# keep requiring a code owner review while no path has an owner any more, and
+# nobody notices.
+name: CODEOWNERS validation
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  codeowners:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: The file must exist
+        run: |
+          set -euo pipefail
+          test -f .github/CODEOWNERS \
+            || { echo "::error::.github/CODEOWNERS is missing"; exit 1; }
+
+      - name: No catch-all rule
+        run: |
+          set -euo pipefail
+          # A `*` rule with an owner would require a review on EVERY pull
+          # request and defeat the point of delegating non-sensitive merges.
+          if grep -Eq '^[[:space:]]*\*[[:space:]]' .github/CODEOWNERS; then
+            echo "::error::catch-all '*' rule is not allowed"
+            exit 1
+          fi
+
+      - name: Syntax errors reported by GitHub
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          # Same data as the CODEOWNERS tab in the web UI. The ref must be fully
+          # qualified: `?ref=main` returns 404, `?ref=refs/heads/main` returns
+          # the analysis.
+          ref="refs/heads/${GITHUB_HEAD_REF:-${GITHUB_REF_NAME}}"
+          endpoint="repos/${GITHUB_REPOSITORY}/codeowners/errors?ref=${ref}"
+
+          if ! payload=$(gh api "$endpoint" 2>&1); then
+            echo "::error::cannot query $endpoint — $payload"
+            exit 1
+          fi
+
+          count=$(printf '%s' "$payload" | jq '.errors | length')
+          if [ "$count" != "0" ]; then
+            printf '%s' "$payload" | jq -r \
+              '.errors[] | "::error file=\(.path),line=\(.line)::\(.message) — \(.suggestion // "no suggestion")"'
+            exit 1
+          fi
+          echo "CODEOWNERS is valid on $ref"
