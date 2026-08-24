@@ -57,11 +57,23 @@ jobs:
         id: build-comment
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_PROJECT_KEY: "${{ github.repository_owner }}_${{ github.event.repository.name }}"
+          SONAR_PROJECT_KEY_FALLBACK: "${{ github.repository_owner }}_${{ github.event.repository.name }}"
           PR_BRANCH: ${{ github.event.pull_request.head.ref }}
           BASE_BRANCH: ${{ github.event.pull_request.base.ref }}
         run: |
           set -euo pipefail
+
+          # The project key is whatever sonar-project.properties declares, because
+          # that is what SonarCloud stores and it does NOT follow a repository
+          # rename. Deriving it from the repo name meant that the first rename
+          # would silently point the queries below at a project that does not
+          # exist: the API returns nothing, the comment reads 0 bugs and 0
+          # vulnerabilities, and the report link 404s. Green, and wrong.
+          # The repo-name form stays as a fallback for repos without the file.
+          SONAR_PROJECT_KEY="$(sed -n 's/^[[:space:]]*sonar\.projectKey[[:space:]]*=[[:space:]]*//p' \
+            sonar-project.properties 2>/dev/null | head -1 | tr -d '[:space:]')"
+          SONAR_PROJECT_KEY="${SONAR_PROJECT_KEY:-$SONAR_PROJECT_KEY_FALLBACK}"
+          echo "SonarCloud project key: $SONAR_PROJECT_KEY"
 
           # ── Parser Clover → JSON ──────────────────────────────────
           cat > /tmp/parse_clover.py << 'PYEOF'
