@@ -1,0 +1,65 @@
+# Versioning and release for the organization's shared CI.
+#
+# release-please reads the Conventional Commits landed on main and maintains an
+# open "Release PR" carrying the next version and its changelog. Merging that
+# pull request is the release: it creates an immutable vX.Y.Z tag, publishes the
+# GitHub Release, and this workflow then repoints the moving major tag (vX) at
+# it.
+#
+# Consumers pin @v3 to follow patches and minors, or an exact @v3.Y.Z where the
+# call reaches production. A major is never adopted by anyone automatically.
+name: Release
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      # The default GITHUB_TOKEN cannot move a tag here: the org ruleset
+      # plethore-shared-ci-tags blocks non-fast-forward on refs/tags/v*, and the
+      # built-in GitHub Actions app is not accepted as a bypass actor. The App
+      # behind these secrets is registered as an Integration bypass actor.
+      - uses: actions/create-github-app-token@v2
+        id: app-token
+        with:
+          app-id: ${{ secrets.RELEASE_APP_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+
+      - uses: googleapis/release-please-action@5c625bfb5d1ff62eadeeb3772007f7f66fdcf071 # v4
+        id: release
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+      - name: Repoint the moving major tag
+        if: steps.release.outputs.release_created == 'true'
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          TAG: ${{ steps.release.outputs.tag_name }}
+          MAJOR: v${{ steps.release.outputs.major }}
+          SHA: ${{ steps.release.outputs.sha }}
+        run: |
+          set -euo pipefail
+          # The immutable tag is created by release-please. The major pointer is
+          # only ever moved to a commit that was actually released, never to a
+          # hand-picked one.
+          echo "released $TAG at $SHA; moving $MAJOR"
+          gh api --method PATCH "repos/${GITHUB_REPOSITORY}/git/refs/tags/${MAJOR}" \
+            -F sha="$SHA" -F force=true \
+            || gh api --method POST "repos/${GITHUB_REPOSITORY}/git/refs" \
+                 -f ref="refs/tags/${MAJOR}" -f sha="$SHA"
+          echo "$MAJOR -> $SHA"
