@@ -1,0 +1,81 @@
+# CI for this repository itself.
+#
+# Every other workflow here is `workflow_call`-only, so nothing ever ran on this
+# repo's own pull requests: the repository that publishes the organization's CI
+# was the one repository without any. This file closes that gap.
+name: Self CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  actionlint:
+    name: actionlint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install actionlint
+        env:
+          VERSION: 1.7.12
+          SHA256: 8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8
+        run: |
+          set -euo pipefail
+          # Pinned release binary with a checksum rather than a third-party
+          # action: this repository runs with every consumer's secrets, so its
+          # own supply chain is worth keeping short.
+          url="https://github.com/rhysd/actionlint/releases/download/v${VERSION}/actionlint_${VERSION}_linux_amd64.tar.gz"
+          curl -fsSL -o actionlint.tar.gz "$url"
+          echo "${SHA256}  actionlint.tar.gz" | sha256sum -c -
+          tar xzf actionlint.tar.gz actionlint
+          ./actionlint -version
+
+      - name: Lint every workflow and composite action
+        run: ./actionlint -color -verbose
+
+  codeowners:
+    name: codeowners
+    # Dogfooding: this is the exact reusable workflow 13 repositories consume.
+    # Referenced by local path so a pull request validates its own version.
+    uses: ./.github/workflows/codeowners-validation.yml
+
+  contracts:
+    name: contracts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Job ids required by org ruleset plethore-shared-pipeline-checks
+        run: |
+          set -euo pipefail
+          # Ruleset 21299998 hard-codes the required check contexts
+          # "lint / laravel-pint" and "test / phpunit". Those strings are
+          # "<caller job id> / <called job id>". Renaming a job id here and
+          # moving a version tag leaves all 11 repositories on that ruleset
+          # waiting forever for a status that can no longer be reported, and
+          # only an organization owner can unstick them.
+          fail=0
+          check() {
+            if ! grep -Eq "^  $2:" "$1"; then
+              echo "::error file=$1::job id '$2' is required by org ruleset plethore-shared-pipeline-checks; renaming it freezes every consumer's protected branches"
+              fail=1
+            fi
+          }
+          check .github/workflows/laravel-pint.yml laravel-pint
+          check .github/workflows/phpunit.yml phpunit
+          exit $fail
+
+      - name: Documented examples must pin a released version
+        run: |
+          set -euo pipefail
+          # A README example pinning @main hands the next repository a floating
+          # dependency on unreleased CI.
+          if grep -n 'Supplement-Bacon/\.github/\.github/workflows/[^@]*@main' README.md; then
+            echo "::error file=README.md::documented examples must pin a release tag (@v3), never @main"
+            exit 1
+          fi

@@ -1,0 +1,79 @@
+# Versioning and release for the organization's shared CI.
+#
+# release-please reads the Conventional Commits landed on main and maintains an
+# open "Release PR" carrying the next version and its changelog. Merging that
+# pull request is the release: it creates an immutable vX.Y.Z tag, publishes the
+# GitHub Release, and this workflow then repoints the moving major tag at it.
+#
+# Two kinds of tag, governed by two org rulesets:
+#   vX.Y.Z  immutable  - created here, then never moved or deleted by anyone,
+#                        organization owners included
+#                        (plethore-shared-ci-release-tags, no bypass actors)
+#   vX      pointer    - repointed at the newest vX.Y.Z
+#                        (plethore-shared-ci-tags, OrganizationAdmin bypass)
+#
+# Why a PAT and not GITHUB_TOKEN: a workflow runs as the GitHub Actions app, not
+# as the person who triggered it, and GitHub refuses that app as a ruleset
+# bypass actor. RELEASE_TOKEN belongs to an organization owner, so its pushes
+# are covered by the OrganizationAdmin bypass. It is also what makes the Release
+# PR trigger Self CI - a pull request opened by GITHUB_TOKEN does not start
+# workflow runs, and would sit forever without its required checks.
+#
+# Consumers pin @v3 to follow patches and minors, or an exact @v3.Y.Z where the
+# call reaches production. A major is never adopted by anyone automatically.
+name: Release
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: googleapis/release-please-action@5c625bfb5d1ff62eadeeb3772007f7f66fdcf071 # v4
+        id: release
+        with:
+          token: ${{ secrets.RELEASE_TOKEN }}
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+      - name: Repoint the moving major tag
+        if: steps.release.outputs.release_created == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          TAG: ${{ steps.release.outputs.tag_name }}
+          MAJOR: v${{ steps.release.outputs.major }}
+          SHA: ${{ steps.release.outputs.sha }}
+        run: |
+          set -euo pipefail
+          # The immutable tag was created by release-please. The pointer is only
+          # ever moved onto a commit that was actually released, never onto a
+          # hand-picked one -- that is the whole point of the split.
+          if gh api "repos/${GITHUB_REPOSITORY}/git/ref/tags/${MAJOR}" >/dev/null 2>&1; then
+            gh api --method PATCH "repos/${GITHUB_REPOSITORY}/git/refs/tags/${MAJOR}" \
+              -F sha="${SHA}" -F force=true >/dev/null
+          else
+            gh api --method POST "repos/${GITHUB_REPOSITORY}/git/refs" \
+              -f ref="refs/tags/${MAJOR}" -f sha="${SHA}" >/dev/null
+          fi
+          moved=$(gh api "repos/${GITHUB_REPOSITORY}/git/ref/tags/${MAJOR}" --jq '.object.sha')
+          if [ "$moved" != "${SHA}" ]; then
+            echo "::error::${MAJOR} is at ${moved}, expected ${SHA}"
+            exit 1
+          fi
+          {
+            echo "## ${TAG} released"
+            echo
+            echo "- immutable tag \`${TAG}\` at \`${SHA}\`"
+            echo "- pointer \`${MAJOR}\` now follows it"
+            echo
+            echo "Consumers pinned to \`${MAJOR}\` pick this up on their next run."
+          } >> "$GITHUB_STEP_SUMMARY"

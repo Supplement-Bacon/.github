@@ -31,3 +31,10 @@
 # Without this rule, governance can be lifted by a single pull request.
 /CODEOWNERS @Sml995
 /.github/CODEOWNERS @Sml995
+
+# --- Release trigger ----------------------------------------------------------
+# Merging a release-please Release PR cuts an immutable tag and repoints the
+# moving major tag, which reaches 17 repositories. Owning the manifest makes
+# that merge require a code owner approval.
+/.release-please-manifest.json @Sml995
+/version.txt @Sml995

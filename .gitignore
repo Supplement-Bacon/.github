@@ -1,0 +1,4 @@
+# Local tooling. self-ci.yml downloads actionlint into the runner workspace;
+# keep a local copy from ever being committed.
+/actionlint
+*.tgz

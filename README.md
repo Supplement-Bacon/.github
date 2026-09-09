@@ -180,7 +180,7 @@ jobs:
     if: |
       (github.event_name == 'push' && (github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/main')) || 
       (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && github.event.inputs.confirmation == 'deploy')
-    uses: Supplement-Bacon/.github/.github/workflows/forge.yml@main
+    uses: Supplement-Bacon/.github/.github/workflows/forge.yml@v3
     with:
       environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
       # Optional: if set to "P", the workflow will use the secret P_DOMAIN instead of DOMAIN
