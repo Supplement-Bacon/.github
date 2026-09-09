@@ -133,8 +133,8 @@ jobs:
           else
             trend="no change"; trend_icon="➡️"; cov_sign=" "
           fi
-          hits_sign=$([ $pr_hits -ge $base_hits ] && echo "+" || echo "-")
-          misses_sign=$([ $pr_misses -le $base_misses ] && echo "+" || echo "-")
+          hits_sign=$([ "$pr_hits" -ge "$base_hits" ] && echo "+" || echo "-")
+          misses_sign=$([ "$pr_misses" -le "$base_misses" ] && echo "+" || echo "-")
 
           # ── SonarCloud quality metrics (PR branch) ───────────────
           resp=$(curl -s -u "${SONAR_TOKEN}:" \
@@ -152,8 +152,9 @@ jobs:
 
           # ── Output ───────────────────────────────────────────────
           DELIMITER=$(dd if=/dev/urandom bs=15 count=1 2>/dev/null | base64 | tr -dc 'a-zA-Z0-9')
-          echo "comment_body<<$DELIMITER" >> "$GITHUB_OUTPUT"
-          cat <<EOF >> "$GITHUB_OUTPUT"
+          {
+          echo "comment_body<<$DELIMITER"
+          cat <<EOF
           <!-- sonarcloud-coverage-report -->
           ## Coverage Report
 
@@ -185,7 +186,8 @@ jobs:
 
           [🔍 Full report on SonarCloud →](https://sonarcloud.io/project/overview?id=$SONAR_PROJECT_KEY)
           EOF
-          echo "$DELIMITER" >> "$GITHUB_OUTPUT"
+          echo "$DELIMITER"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Comment PR
         if: github.event_name == 'pull_request'

@@ -76,11 +76,14 @@ jobs:
       - name: Run tests with coverage
         run: |
           set -o pipefail
-          COVERAGE_ARGS=$(echo "${{ inputs.test-args }}" | sed -E 's/--parallel[[:space:]]*//g; s/--processes=[0-9]+[[:space:]]*//g')
+          # An array, not a string: these are several CLI flags and must reach
+          # the test runner as separate arguments. Quoting a plain string would
+          # pass them as one argument; leaving it unquoted would also glob.
+          read -r -a COVERAGE_ARGS <<< "$(echo "${{ inputs.test-args }}" | sed -E 's/--parallel[[:space:]]*//g; s/--processes=[0-9]+[[:space:]]*//g')"
           if [ "${{ inputs.package }}" = "true" ]; then
-            vendor/bin/testbench package:test $COVERAGE_ARGS --coverage-clover=coverage.xml
+            vendor/bin/testbench package:test "${COVERAGE_ARGS[@]}" --coverage-clover=coverage.xml
           else
-            php artisan test $COVERAGE_ARGS --coverage-clover=coverage.xml
+            php artisan test "${COVERAGE_ARGS[@]}" --coverage-clover=coverage.xml
           fi
 
       - name: Upload coverage report
@@ -125,11 +128,14 @@ jobs:
         continue-on-error: true
         run: |
           set -o pipefail
-          COVERAGE_ARGS=$(echo "${{ inputs.test-args }}" | sed -E 's/--parallel[[:space:]]*//g; s/--processes=[0-9]+[[:space:]]*//g')
+          # An array, not a string: these are several CLI flags and must reach
+          # the test runner as separate arguments. Quoting a plain string would
+          # pass them as one argument; leaving it unquoted would also glob.
+          read -r -a COVERAGE_ARGS <<< "$(echo "${{ inputs.test-args }}" | sed -E 's/--parallel[[:space:]]*//g; s/--processes=[0-9]+[[:space:]]*//g')"
           if [ "${{ inputs.package }}" = "true" ]; then
-            vendor/bin/testbench package:test $COVERAGE_ARGS --coverage-clover=coverage-base.xml
+            vendor/bin/testbench package:test "${COVERAGE_ARGS[@]}" --coverage-clover=coverage-base.xml
           else
-            php artisan test $COVERAGE_ARGS --coverage-clover=coverage-base.xml
+            php artisan test "${COVERAGE_ARGS[@]}" --coverage-clover=coverage-base.xml
           fi
 
       - name: Fallback — empty coverage file if tests crashed
