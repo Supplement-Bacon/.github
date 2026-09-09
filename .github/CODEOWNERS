@@ -1,0 +1,31 @@
+# CODEOWNERS — owned by Plethore governance. Do not edit by hand.
+#
+# This file declares sensitive paths only. There is deliberately no catch-all
+# `*` rule: a path not listed here has no owner, and one approval from any
+# team member is enough to merge.
+#
+# Syntax reminder: the LAST matching rule wins, so the most specific paths
+# belong at the bottom of the file.
+# This file must exist on EVERY protected base branch. CODEOWNERS is read from
+# the pull request's base branch, not from the default branch.
+#
+# This repository is the org's shared CI surface. Its reusable workflows are
+# consumed by 17 repositories through the moving tags @v1, @v2 and @v3, with
+# `secrets: inherit`. A change merged here reaches every consumer on their next
+# run, executing with their deployment secrets. There is no per-consumer review.
+
+# --- Reusable workflows: shared CI executed org-wide with inherited secrets ---
+# Consumed by 17 repositories via moving tags. Anything merged here runs in the
+# consumers' pipelines with `secrets: inherit`, i.e. with their deployment
+# credentials, without any further review on their side.
+/.github/workflows/ @Supplement-Bacon/plethore-maintainers
+
+# --- Composite actions: same blast radius, called from the workflows above ----
+# A composite action runs inside the caller's job and sees the same secrets and
+# the same checkout. It is part of the shared CI surface.
+/.github/actions/ @Supplement-Bacon/plethore-maintainers
+
+# --- The CODEOWNERS file itself ----------------------------------------------
+# Without this rule, governance can be lifted by a single pull request.
+/CODEOWNERS @Supplement-Bacon/plethore-maintainers
+/.github/CODEOWNERS @Supplement-Bacon/plethore-maintainers
