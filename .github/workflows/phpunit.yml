@@ -53,7 +53,7 @@ jobs:
           ref: ${{ github.head_ref || github.ref_name }}
 
       - name: Setup PHP & Composer
-        uses: Supplement-Bacon/.github/.github/actions/setup-php-and-dependencies@v3
+        uses: Supplement-Bacon/.github/.github/actions/setup-php-and-dependencies@v4
         with:
           app_id: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_ID }}
           private_key: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_PRIVATE_KEY }}
@@ -79,7 +79,15 @@ jobs:
           # An array, not a string: these are several CLI flags and must reach
           # the test runner as separate arguments. Quoting a plain string would
           # pass them as one argument; leaving it unquoted would also glob.
-          read -r -a COVERAGE_ARGS <<< "$(echo "${{ inputs.test-args }}" | sed -E 's/--parallel[[:space:]]*//g; s/--processes=[0-9]+[[:space:]]*//g')"
+          # Apps keep --parallel: paratest merges each worker's pcov coverage
+          # into the same clover report as a sequential run. Packages
+          # (Testbench) still run sequentially, their parallel coverage being
+          # unverified.
+          if [ "${{ inputs.package }}" = "true" ]; then
+            read -r -a COVERAGE_ARGS <<< "$(echo "${{ inputs.test-args }}" | sed -E 's/--parallel[[:space:]]*//g; s/--processes=[0-9]+[[:space:]]*//g')"
+          else
+            read -r -a COVERAGE_ARGS <<< "${{ inputs.test-args }}"
+          fi
           if [ "${{ inputs.package }}" = "true" ]; then
             vendor/bin/testbench package:test "${COVERAGE_ARGS[@]}" --coverage-clover=coverage.xml
           else
@@ -104,7 +112,7 @@ jobs:
           ref: ${{ github.head_ref || github.ref_name }}
 
       - name: Setup PHP & Composer
-        uses: Supplement-Bacon/.github/.github/actions/setup-php-and-dependencies@v3
+        uses: Supplement-Bacon/.github/.github/actions/setup-php-and-dependencies@v4
         with:
           app_id: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_ID }}
           private_key: ${{ secrets.BACKEND_CI_DEPENDENCIES_APP_PRIVATE_KEY }}
@@ -131,7 +139,15 @@ jobs:
           # An array, not a string: these are several CLI flags and must reach
           # the test runner as separate arguments. Quoting a plain string would
           # pass them as one argument; leaving it unquoted would also glob.
-          read -r -a COVERAGE_ARGS <<< "$(echo "${{ inputs.test-args }}" | sed -E 's/--parallel[[:space:]]*//g; s/--processes=[0-9]+[[:space:]]*//g')"
+          # Apps keep --parallel: paratest merges each worker's pcov coverage
+          # into the same clover report as a sequential run. Packages
+          # (Testbench) still run sequentially, their parallel coverage being
+          # unverified.
+          if [ "${{ inputs.package }}" = "true" ]; then
+            read -r -a COVERAGE_ARGS <<< "$(echo "${{ inputs.test-args }}" | sed -E 's/--parallel[[:space:]]*//g; s/--processes=[0-9]+[[:space:]]*//g')"
+          else
+            read -r -a COVERAGE_ARGS <<< "${{ inputs.test-args }}"
+          fi
           if [ "${{ inputs.package }}" = "true" ]; then
             vendor/bin/testbench package:test "${COVERAGE_ARGS[@]}" --coverage-clover=coverage-base.xml
           else

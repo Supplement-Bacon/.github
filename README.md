@@ -132,6 +132,13 @@ Inputs:
 **2 jobs are defined:**
 
 1. **phpunit** — Runs the full test suite with coverage (`pcov`), then uploads `coverage.xml` as an artifact.
+
+Since **v4**, apps run with coverage **and** the `--parallel` / `--processes`
+flags of `test-args`: paratest merges each worker's `pcov` coverage into the
+same `coverage.xml` as a sequential run. Up to v3 those flags were stripped and
+every suite ran sequentially. Before moving a repository to `@v4`, check that its
+suite passes with `php artisan test --parallel`. Packages (`package: true`) still
+run sequentially.
 2. **phpunit-coverage** — On pull requests, checks out the base branch and generates a reference coverage report (`coverage-base.xml`) used for SonarQube comparison.
 
 ### SonarQube
