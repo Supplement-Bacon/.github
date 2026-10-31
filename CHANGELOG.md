@@ -1,5 +1,16 @@
 # Changelog
 
+## [4.0.0](https://github.com/Supplement-Bacon/.github/compare/v3.0.2...v4.0.0) (2026-10-31)
+
+
+### ⚠ BREAKING CHANGES
+
+* **phpunit:** apps on this major run their tests in parallel as their test-args always requested. Move a repository from @v3 to @v4 only once its suite passes with `php artisan test --parallel`.
+
+### Performance
+
+* **phpunit:** keep --parallel for apps when running with coverage ([2ccae7b](https://github.com/Supplement-Bacon/.github/commit/2ccae7bd796101fb44afdd34c1a6863feb13cadd))
+
 ## [3.0.2](https://github.com/Supplement-Bacon/.github/compare/v3.0.1...v3.0.2) (2026-09-09)
 
 
