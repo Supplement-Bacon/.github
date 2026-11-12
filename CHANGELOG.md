@@ -1,5 +1,13 @@
 # Changelog
 
+## [4.1.0](https://github.com/Supplement-Bacon/.github/compare/v4.0.0...v4.1.0) (2026-11-12)
+
+
+### Features
+
+* **clever:** add a Clever Cloud deploy workflow ([b4e5b27](https://github.com/Supplement-Bacon/.github/commit/b4e5b275116ade86f7ee3fa47ceea2425493d925))
+* **clever:** workflow de déploiement Clever Cloud ([05a5c27](https://github.com/Supplement-Bacon/.github/commit/05a5c2721506212e85c9343d2534c0d053021302))
+
 ## [4.0.0](https://github.com/Supplement-Bacon/.github/compare/v3.0.2...v4.0.0) (2026-10-31)
 
 
