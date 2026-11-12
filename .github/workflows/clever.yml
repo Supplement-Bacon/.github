@@ -1,0 +1,93 @@
+# Deploy a repository to one or more Clever Cloud applications.
+#
+# Clever Cloud builds the code itself (composer install, the app's hooks): this
+# workflow only pushes the commit with clever-tools and follows the deployment
+# until it ends, so the job fails when the build or the start fails.
+#
+# Applications are named <prefix>-<app>-<environment> (OpenTofu naming in
+# plethore-infra) and looked up by name in the organisation: no application ID
+# to copy into each repository.
+#
+# Secrets (organisation or repository): CLEVER_TOKEN and CLEVER_SECRET, the
+# OAuth pair `clever login` writes to ~/.config/clever-cloud/clever-tools.json.
+# They belong to a member of the organisation and expire after one year.
+name: Deploy to Clever Cloud
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: "GitHub environment holding the secrets (staging, production)"
+        required: true
+        type: string
+      clever_environment:
+        description: "Suffix of the Clever Cloud application names (staging, prod)"
+        required: true
+        type: string
+      apps:
+        description: "Space-separated application keys, deployed in this order (e.g. \"webhook-api webhook-worker\")"
+        required: true
+        type: string
+      prefix:
+        description: "Prefix of the Clever Cloud application names"
+        required: true
+        type: string
+      organisation:
+        description: "Clever Cloud organisation ID (orga_...)"
+        required: true
+        type: string
+    secrets:
+      CLEVER_TOKEN:
+        required: true
+      CLEVER_SECRET:
+        required: true
+
+permissions:
+  contents: read
+
+# One deployment at a time per repository and environment. Never cancel one in
+# progress: a cancelled push can leave an application between two versions.
+concurrency:
+  group: clever-deploy-${{ github.repository }}-${{ inputs.clever_environment }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    timeout-minutes: 30
+    steps:
+      # Full history: Clever Cloud refuses pushes from a shallow clone.
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - name: Install clever-tools
+        run: npm install --global clever-tools@5.4.0
+
+      - name: Deploy
+        env:
+          CLEVER_TOKEN: ${{ secrets.CLEVER_TOKEN }}
+          CLEVER_SECRET: ${{ secrets.CLEVER_SECRET }}
+          APPS: ${{ inputs.apps }}
+          PREFIX: ${{ inputs.prefix }}
+          CLEVER_ENV: ${{ inputs.clever_environment }}
+          ORGANISATION: ${{ inputs.organisation }}
+        run: |
+          set -euo pipefail
+          # clever deploy pushes a branch: name the checked-out commit.
+          git switch --force-create clever-deploy
+          for app in $APPS; do
+            name="$PREFIX-$app-$CLEVER_ENV"
+            echo "::group::$name"
+            clever link "$name" --org "$ORGANISATION" --alias "$app"
+            # --force: the Clever remote follows whatever was last deployed,
+            # not this branch. rebuild: a re-run deploys the same commit again.
+            clever deploy --alias "$app" --branch clever-deploy --force \
+              --same-commit-policy rebuild --exit-on deploy-end
+            echo "::endgroup::"
+          done
