@@ -127,11 +127,11 @@ Inputs:
 - `composer_repositories` (`string`, optional, default: `""`) — Newline-separated private repositories needed during Composer install.
 - `test-args` (`string`, optional, default: `--parallel --processes=4 --colors=never`) — Arguments passed to PHPUnit.
 - `run-example-tests` (`boolean`, optional, default: `false`) — If `true`, skips standard PHPUnit jobs so example-only test workflows can run instead.
-- `run-phpunit-coverage` (`boolean`, optional, default: `true`) — If `true`, enables the `phpunit-coverage` job on pull requests.
+- `run-phpunit-coverage` (`boolean`, optional) — **Deprecated, no effect.** The base-branch coverage job it toggled was removed.
 - `extra_owner` (`string`, optional, default: `""`) — Optional second owner (organization/user) for additional private repos.
 - `extra_repositories` (`string`, optional, default: `""`) — Newline-separated repositories for `extra_owner`.
 
-**2 jobs are defined:**
+**Jobs:**
 
 1. **phpunit** — Runs the full test suite with coverage (`pcov`), then uploads `coverage.xml` as an artifact.
 
@@ -145,7 +145,9 @@ run sequentially.
    report and uploads it to [Datadog Test Optimization](https://docs.datadoghq.com/tests/)
    (EU site, service = repository name), even when tests fail. The upload never
    fails the job; without the secret the step is skipped.
-2. **phpunit-coverage** — On pull requests, checks out the base branch and generates a reference coverage report (`coverage-base.xml`) used for SonarQube comparison. Only SonarQube reads it: repositories on **Datadog Code Coverage** set `run-phpunit-coverage: false` and skip a second full test run.
+The `phpunit-coverage` job, which re-ran the whole suite on pull requests to
+produce a `coverage-base.xml` for SonarQube, was removed. Datadog Code
+Coverage measures patch coverage against the base branch's uploaded report.
 
 ### Datadog Code Coverage
 
@@ -171,8 +173,6 @@ PR Gates, so the workflow only uploads.
 test:
   uses: Supplement-Bacon/.github/.github/workflows/phpunit.yml@v4
   secrets: inherit
-  with:
-    run-phpunit-coverage: false # the base-branch report only fed SonarQube
 
 coverage:
   needs: test
