@@ -46,6 +46,10 @@ jobs:
   phpunit:
     if: inputs.run-example-tests != true
     runs-on: ubuntu-latest
+    env:
+      # Read by the Datadog upload step only; empty when the caller has no
+      # such secret, which turns that step into a no-op.
+      DD_API_KEY: ${{ secrets.DD_API_KEY }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
@@ -89,9 +93,9 @@ jobs:
             read -r -a COVERAGE_ARGS <<< "${{ inputs.test-args }}"
           fi
           if [ "${{ inputs.package }}" = "true" ]; then
-            vendor/bin/testbench package:test "${COVERAGE_ARGS[@]}" --coverage-clover=coverage.xml
+            vendor/bin/testbench package:test "${COVERAGE_ARGS[@]}" --coverage-clover=coverage.xml --log-junit=junit.xml
           else
-            php artisan test "${COVERAGE_ARGS[@]}" --coverage-clover=coverage.xml
+            php artisan test "${COVERAGE_ARGS[@]}" --coverage-clover=coverage.xml --log-junit=junit.xml
           fi
 
       - name: Upload coverage report
@@ -101,6 +105,27 @@ jobs:
           name: coverage-pr
           path: coverage.xml
           retention-days: 1
+
+      # Datadog Test Optimization has no native PHP library: it ingests the
+      # PHPUnit JUnit report instead (per-test results, durations, flaky test
+      # detection). Runs on failure too, when the results matter most, and can
+      # never fail the job: `test / phpunit` is a required check org-wide.
+      - name: Upload test results to Datadog
+        if: always() && env.DD_API_KEY != '' && hashFiles('junit.xml') != ''
+        continue-on-error: true
+        uses: DataDog/junit-upload-github-action@cdbf0b0acda1005e45c4a11d445bf3dde78e796f # v4.1.0
+        env:
+          # On pull_request events GITHUB_SHA is the synthetic merge commit,
+          # which Datadog cannot match to the pull request. Report the head.
+          DD_GIT_COMMIT_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          DD_GIT_BRANCH: ${{ github.head_ref || github.ref_name }}
+        with:
+          api_key: ${{ env.DD_API_KEY }}
+          site: datadoghq.eu
+          files: junit.xml
+          auto-discovery: "false"
+          service: ${{ github.event.repository.name }}
+          env: ci
 
   phpunit-coverage:
     if: github.event_name == 'pull_request' && inputs.run-example-tests != true && inputs.run-phpunit-coverage == true
