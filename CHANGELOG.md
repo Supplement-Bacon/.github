@@ -1,5 +1,14 @@
 # Changelog
 
+## [4.2.0](https://github.com/Supplement-Bacon/.github/compare/v4.1.0...v4.2.0) (2026-11-15)
+
+
+### Features
+
+* **coverage:** add a Datadog Code Coverage workflow ([bbccdbd](https://github.com/Supplement-Bacon/.github/commit/bbccdbd2c4c9236ccbac549382554bf10f906774))
+* Datadog Code Coverage and Test Optimization ([f0d8385](https://github.com/Supplement-Bacon/.github/commit/f0d83855048443f42757e3786aab1916f057812c))
+* **phpunit:** upload JUnit results to Datadog Test Optimization ([d6cad2d](https://github.com/Supplement-Bacon/.github/commit/d6cad2d6041d42940dd257ff84f465367cd8cd91))
+
 ## [4.1.0](https://github.com/Supplement-Bacon/.github/compare/v4.0.0...v4.1.0) (2026-11-12)
 
 
