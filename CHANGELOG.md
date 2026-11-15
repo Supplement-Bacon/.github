@@ -1,5 +1,13 @@
 # Changelog
 
+## [4.2.1](https://github.com/Supplement-Bacon/.github/compare/v4.2.0...v4.2.1) (2026-11-15)
+
+
+### Performance
+
+* **phpunit:** drop the base-branch coverage job ([97fc0a0](https://github.com/Supplement-Bacon/.github/commit/97fc0a0b1d91a3666d53730b272d0ce99aa36b85))
+* **phpunit:** drop the base-branch coverage job ([f3929c5](https://github.com/Supplement-Bacon/.github/commit/f3929c5e322de2f5185c499f1101b4b0c14f1e10))
+
 ## [4.2.0](https://github.com/Supplement-Bacon/.github/compare/v4.1.0...v4.2.0) (2026-11-15)
 
 
