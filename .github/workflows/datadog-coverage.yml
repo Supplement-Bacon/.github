@@ -1,0 +1,62 @@
+name: Datadog Code Coverage
+
+# Uploads the Clover report produced by phpunit.yml to Datadog Code Coverage.
+# It replaces sonarqube.yml: Datadog computes total and patch coverage, posts
+# the pull request comment and evaluates PR Gates itself, so nothing here
+# compares reports or writes comments.
+#
+# Run it on pushes to the long-lived branches as well as on pull requests:
+# patch coverage on a pull request is measured against the coverage Datadog
+# received for its base branch.
+
+on:
+  workflow_call:
+    inputs:
+      site:
+        required: false
+        type: string
+        default: "datadoghq.eu"
+        description: "Datadog site the organization lives on"
+      flags:
+        required: false
+        type: string
+        default: ""
+        description: "Comma-separated flags to group reports (e.g. type:unit-tests)"
+
+permissions:
+  contents: read
+
+jobs:
+  coverage:
+    runs-on: ubuntu-latest
+    steps:
+      # Checked out at the commit the tests ran on: datadog-ci reads the git
+      # metadata (commit, branch, diff) from this checkout, and the paths in
+      # the Clover report resolve against it.
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+
+      - name: Download coverage report
+        uses: actions/download-artifact@v7
+        with:
+          name: coverage-pr
+          path: .
+
+      - name: Upload coverage to Datadog
+        # Pinned to the commit of v1.0.5: this workflow runs with every
+        # consumer's inherited secrets.
+        uses: DataDog/coverage-upload-github-action@d9548b1c3c4ab639d5d3ab29a1508af188975f77 # v1.0.5
+        env:
+          # On pull_request events GITHUB_SHA is the synthetic merge commit,
+          # which Datadog cannot match to the pull request. Report the head.
+          DD_GIT_COMMIT_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          DD_GIT_BRANCH: ${{ github.head_ref || github.ref_name }}
+        with:
+          api_key: ${{ secrets.DD_API_KEY }}
+          site: ${{ inputs.site }}
+          files: coverage.xml
+          format: clover
+          flags: ${{ inputs.flags }}

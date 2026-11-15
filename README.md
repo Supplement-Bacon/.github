@@ -12,11 +12,12 @@ It centralizes reusable GitHub Actions workflows and composite actions consumed 
 3. [Reusable Workflows](#reusable-workflows)
    1. [Laravel Pint](#laravel-pint)
    2. [PHPUnit](#phpunit)
-   3. [SonarQube](#sonarqube)
-   4. [Model Coverage](#model-coverage)
-   5. [Deploy (Forge)](#deploy-forge)
-   6. [Frontend Lib CI](#frontend-lib-ci)
-   7. [CODEOWNERS Validation](#codeowners-validation)
+   3. [Datadog Code Coverage](#datadog-code-coverage)
+   4. [SonarQube (deprecated)](#sonarqube-deprecated)
+   5. [Model Coverage](#model-coverage)
+   6. [Deploy (Forge)](#deploy-forge)
+   7. [Frontend Lib CI](#frontend-lib-ci)
+   8. [CODEOWNERS Validation](#codeowners-validation)
 4. [Composite Actions](#composite-actions)
    1. [Setup PHP And Dependencies](#setup-php-and-dependencies)
 5. [Usage](#usage)
@@ -80,7 +81,8 @@ requires editing the ruleset, which leaves an audit trail.
     ├── laravel-pint.yml            # PHP code formatting with Laravel Pint
     ├── model-coverage.yml          # Model factory coverage reporting
     ├── phpunit.yml                 # PHPUnit tests & coverage
-    ├── sonarqube.yml               # SonarCloud analysis & PR comment
+    ├── datadog-coverage.yml        # Datadog Code Coverage upload
+    ├── sonarqube.yml               # SonarCloud analysis & PR comment (deprecated)
     ├── release.yml                 # This repository's own releases (not reusable)
     └── self-ci.yml                 # This repository's own CI (not reusable)
 
@@ -139,11 +141,47 @@ same `coverage.xml` as a sequential run. Up to v3 those flags were stripped and
 every suite ran sequentially. Before moving a repository to `@v4`, check that its
 suite passes with `php artisan test --parallel`. Packages (`package: true`) still
 run sequentially.
-2. **phpunit-coverage** — On pull requests, checks out the base branch and generates a reference coverage report (`coverage-base.xml`) used for SonarQube comparison.
+2. **phpunit-coverage** — On pull requests, checks out the base branch and generates a reference coverage report (`coverage-base.xml`) used for SonarQube comparison. Only SonarQube reads it: repositories on **Datadog Code Coverage** set `run-phpunit-coverage: false` and skip a second full test run.
 
-### SonarQube
+### Datadog Code Coverage
+
+> `.github/workflows/datadog-coverage.yml`
+
+Uploads the `coverage.xml` (Clover) produced by the **PHPUnit** workflow to
+[Datadog Code Coverage](https://docs.datadoghq.com/code_coverage/). Datadog
+computes total and patch coverage, comments the pull request and evaluates the
+PR Gates, so the workflow only uploads.
+
+| Input   | Type     | Required | Default        | Description                                           |
+| ------- | -------- | -------- | -------------- | ----------------------------------------------------- |
+| `site`  | `string` | ❌       | `datadoghq.eu` | Datadog site the organization lives on                |
+| `flags` | `string` | ❌       | `""`           | Comma-separated flags to group reports                |
+
+- Run it on pushes to `dev` / `main` too: patch coverage is measured against the
+  coverage Datadog received for the base branch.
+- Reports the pull request **head** commit, not the synthetic merge commit.
+- Requires the `DD_API_KEY` secret and the Datadog GitHub App installed on the
+  repository (Pull requests and Checks write access).
+
+```yaml
+test:
+  uses: Supplement-Bacon/.github/.github/workflows/phpunit.yml@v4
+  secrets: inherit
+  with:
+    run-phpunit-coverage: false # the base-branch report only fed SonarQube
+
+coverage:
+  needs: test
+  uses: Supplement-Bacon/.github/.github/workflows/datadog-coverage.yml@v4
+  secrets: inherit
+```
+
+### SonarQube (deprecated)
 
 > `.github/workflows/sonarqube.yml`
+
+Superseded by [Datadog Code Coverage](#datadog-code-coverage). Kept so that
+repositories not yet migrated keep working; it will be removed in a later major.
 
 Runs [SonarCloud](https://sonarcloud.io/) analysis and posts a coverage comment on pull requests.
 
@@ -328,6 +366,7 @@ The following secrets must be configured at organization level or in the calling
 | ----------------------------------------- | --------------------- | --------------------------------------- |
 | `BACKEND_CI_DEPENDENCIES_APP_ID`          | Laravel Pint, PHPUnit | GitHub App ID used for token generation |
 | `BACKEND_CI_DEPENDENCIES_APP_PRIVATE_KEY` | Laravel Pint, PHPUnit | GitHub App private key                  |
+| `DD_API_KEY`                              | Datadog Code Coverage | Datadog API key (EU site)               |
 | `SONAR_TOKEN`                             | SonarQube             | SonarCloud authentication token         |
 | `FORGE_API_TOKEN`                         | Deploy (Forge)        | Laravel Forge API token                 |
 | `FORGE_ORGANIZATION`                      | Deploy (Forge)        | Forge organization slug (CLI v2)        |
