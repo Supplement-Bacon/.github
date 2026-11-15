@@ -49,10 +49,6 @@ jobs:
   phpunit:
     if: inputs.run-example-tests != true
     runs-on: ubuntu-latest
-    env:
-      # Read by the Datadog upload step only; empty when the caller has no
-      # such secret, which turns that step into a no-op.
-      DD_API_KEY: ${{ secrets.DD_API_KEY }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
@@ -113,8 +109,15 @@ jobs:
       # PHPUnit JUnit report instead (per-test results, durations, flaky test
       # detection). Runs on failure too, when the results matter most, and can
       # never fail the job: `test / phpunit` is a required check org-wide.
+      # Only the upload step receives DD_API_KEY, not composer scripts or the
+      # tests. Without the secret the upload is skipped.
+      - name: Check for the Datadog key
+        id: datadog
+        if: always()
+        run: echo "enabled=${{ secrets.DD_API_KEY != '' }}" >> "$GITHUB_OUTPUT"
+
       - name: Upload test results to Datadog
-        if: always() && env.DD_API_KEY != '' && hashFiles('junit.xml') != ''
+        if: always() && steps.datadog.outputs.enabled == 'true' && hashFiles('junit.xml') != ''
         continue-on-error: true
         uses: DataDog/junit-upload-github-action@cdbf0b0acda1005e45c4a11d445bf3dde78e796f # v4.1.0
         env:
@@ -123,7 +126,7 @@ jobs:
           DD_GIT_COMMIT_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
           DD_GIT_BRANCH: ${{ github.head_ref || github.ref_name }}
         with:
-          api_key: ${{ env.DD_API_KEY }}
+          api_key: ${{ secrets.DD_API_KEY }}
           site: datadoghq.eu
           files: junit.xml
           auto-discovery: "false"

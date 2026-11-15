@@ -45,7 +45,15 @@ jobs:
           name: coverage-pr
           path: .
 
+      - name: Check for the Datadog key
+        id: datadog
+        run: echo "enabled=${{ secrets.DD_API_KEY != '' }}" >> "$GITHUB_OUTPUT"
+
       - name: Upload coverage to Datadog
+        # Skipped without the secret, and never fails the job: a Datadog outage
+        # must not turn a caller's check red.
+        if: steps.datadog.outputs.enabled == 'true'
+        continue-on-error: true
         # Pinned to the commit of v1.0.5: this workflow runs with every
         # consumer's inherited secrets.
         uses: DataDog/coverage-upload-github-action@d9548b1c3c4ab639d5d3ab29a1508af188975f77 # v1.0.5

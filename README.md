@@ -164,6 +164,7 @@ PR Gates, so the workflow only uploads.
 - Run it on pushes to `dev` / `main` too: patch coverage is measured against the
   coverage Datadog received for the base branch.
 - Reports the pull request **head** commit, not the synthetic merge commit.
+- The upload never fails the job, and is skipped without the `DD_API_KEY` secret.
 - Requires the `DD_API_KEY` secret and the Datadog GitHub App installed on the
   repository (Pull requests and Checks write access).
 
