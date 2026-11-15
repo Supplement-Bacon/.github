@@ -1,5 +1,19 @@
 # Changelog
 
+## [4.2.2](https://github.com/Supplement-Bacon/.github/compare/v4.2.1...v4.2.2) (2026-11-15)
+
+
+### Bug fixes
+
+* **datadog:** never fail on a coverage upload, expose the key to uploads only ([f7e8210](https://github.com/Supplement-Bacon/.github/commit/f7e8210fe3e92ba2c0d6c4eb0ada876260461530))
+* **datadog:** never fail on a coverage upload, expose the key to uploads only ([0346585](https://github.com/Supplement-Bacon/.github/commit/0346585015a61a013f240548017173ffa71f3e3e))
+
+
+### CI
+
+* **sonarqube:** remove the deprecated sonarqube workflow ([fc3c6f2](https://github.com/Supplement-Bacon/.github/commit/fc3c6f2ee0a7d1969fadddc3478fc72e00398e00))
+* **sonarqube:** remove the deprecated sonarqube workflow ([48b1ffd](https://github.com/Supplement-Bacon/.github/commit/48b1ffdee29ca097059423dcb66535320a33ffea))
+
 ## [4.2.1](https://github.com/Supplement-Bacon/.github/compare/v4.2.0...v4.2.1) (2026-11-15)
 
 
