@@ -277,7 +277,7 @@ All-in-one action that sets up a complete PHP environment.
 | `private_key`        | ✅       | —                                   | GitHub App private key                            |
 | `repositories`       | ❌       | `""`                                | Additional private repositories for current owner |
 | `php-version`        | ❌       | `8.4`                               | PHP version                                       |
-| `extensions`         | ❌       | `mbstring, xml, ctype, iconv, intl` | PHP extensions                                    |
+| `extensions`         | ❌       | `mbstring, xml, ctype, iconv, intl, opentelemetry` | PHP extensions                       |
 | `coverage`           | ❌       | `none`                              | Coverage driver: `none`, `pcov`, or `xdebug`      |
 | `extra_owner`        | ❌       | `""`                                | Optional second owner (organization/user)         |
 | `extra_repositories` | ❌       | `""`                                | Newline-separated repositories for `extra_owner`  |

@@ -18,7 +18,10 @@ inputs:
     description: "PHP version to install"
   extensions:
     required: false
-    default: "mbstring, xml, ctype, iconv, intl"
+    # opentelemetry: the Pléthore APIs require OpenTelemetry auto-instrumentation
+    # packages (e.g. opentelemetry-auto-curl) whose autoload fails without the
+    # extension, as on Clever Cloud where it is installed.
+    default: "mbstring, xml, ctype, iconv, intl, opentelemetry"
     description: "PHP extensions to install"
   coverage:
     required: false
