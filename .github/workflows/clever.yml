@@ -11,6 +11,12 @@
 # Secrets (organisation or repository): CLEVER_TOKEN and CLEVER_SECRET, the
 # OAuth pair `clever login` writes to ~/.config/clever-cloud/clever-tools.json.
 # They belong to a member of the organisation and expire after one year.
+#
+# After the deployment, the Datadog Synthetics checks tagged suite:cutover for
+# that environment run once (plethore-infra, envs/paris-society/datadog). The
+# job never fails the pipeline: it reports. It is skipped when DD_API_KEY or
+# DD_CI_SYNTHETICS_APP_KEY (application key limited to synthetics_read and
+# synthetics_write) is not available to the repository.
 name: Deploy to Clever Cloud
 
 on:
@@ -36,11 +42,20 @@ on:
         description: "Clever Cloud organisation ID (orga_...)"
         required: true
         type: string
+      synthetics:
+        description: "Run the environment's Datadog Synthetics checks after the deployment"
+        required: false
+        default: true
+        type: boolean
     secrets:
       CLEVER_TOKEN:
         required: true
       CLEVER_SECRET:
         required: true
+      DD_API_KEY:
+        required: false
+      DD_CI_SYNTHETICS_APP_KEY:
+        required: false
 
 permissions:
   contents: read
@@ -91,3 +106,29 @@ jobs:
               --same-commit-policy rebuild --exit-on deploy-end
             echo "::endgroup::"
           done
+
+  synthetics:
+    needs: deploy
+    if: inputs.synthetics
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # Reports only: a failing check shows on the run, the deployment stays green.
+    continue-on-error: true
+    steps:
+      - name: Check the Datadog keys
+        id: keys
+        run: echo "enabled=${{ secrets.DD_API_KEY != '' && secrets.DD_CI_SYNTHETICS_APP_KEY != '' }}" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/setup-node@v6
+        if: steps.keys.outputs.enabled == 'true'
+        with:
+          node-version: 22
+
+      - name: Run the Synthetics checks
+        if: steps.keys.outputs.enabled == 'true'
+        env:
+          DATADOG_API_KEY: ${{ secrets.DD_API_KEY }}
+          DATADOG_APP_KEY: ${{ secrets.DD_CI_SYNTHETICS_APP_KEY }}
+          DATADOG_SITE: datadoghq.eu
+          SEARCH: "tag:suite:cutover env:${{ inputs.clever_environment }}"
+        run: npx --yes @datadog/datadog-ci@5.26.1 synthetics run-tests --search "$SEARCH"
