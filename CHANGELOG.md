@@ -1,5 +1,13 @@
 # Changelog
 
+## [4.4.0](https://github.com/Supplement-Bacon/.github/compare/v4.3.0...v4.4.0) (2026-11-17)
+
+
+### Features
+
+* **clever:** run the Datadog Synthetics checks after a deployment ([8a9ee23](https://github.com/Supplement-Bacon/.github/commit/8a9ee23db8d89a23d9cd9cdf6fa3f4e494c766e1))
+* **clever:** tests Synthetics Datadog après déploiement ([0aa9723](https://github.com/Supplement-Bacon/.github/commit/0aa9723f8ab09e18275360cff1b722fe4845bc78))
+
 ## [4.3.0](https://github.com/Supplement-Bacon/.github/compare/v4.2.2...v4.3.0) (2026-11-17)
 
 
