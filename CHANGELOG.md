@@ -1,5 +1,13 @@
 # Changelog
 
+## [4.3.0](https://github.com/Supplement-Bacon/.github/compare/v4.2.2...v4.3.0) (2026-11-17)
+
+
+### Features
+
+* **setup-php:** extension opentelemetry installée par défaut ([91e02ee](https://github.com/Supplement-Bacon/.github/commit/91e02eed4ea2243ec31c4cc3b8a9c74fcdc2ee28))
+* **setup-php:** install the opentelemetry extension by default ([b1a522b](https://github.com/Supplement-Bacon/.github/commit/b1a522be49a25463f430b82de45c85bd9211c3d4))
+
 ## [4.2.2](https://github.com/Supplement-Bacon/.github/compare/v4.2.1...v4.2.2) (2026-11-15)
 
 
