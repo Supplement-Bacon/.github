@@ -109,9 +109,10 @@ Automatically formats PHP code with [Laravel Pint](https://laravel.com/docs/pint
 | `composer_repositories` | `string` | ❌       | `""`    | Newline-separated private repositories needed during Composer install  |
 | `extra_owner`           | `string` | ❌       | `""`    | Optional second owner (organization/user) for additional private repos |
 | `extra_repositories`    | `string` | ❌       | `""`    | Newline-separated repositories for `extra_owner`                       |
+| `fix`                   | `boolean`| ❌       | `true`  | On a pull request, fix and commit (`true`) or only check (`false`)     |
 
 - Uses the **Setup PHP And Dependencies** composite action to install PHP & Composer.
-- On a **pull request**: runs Pint in fix mode and automatically commits formatting fixes via `stefanzweifel/git-auto-commit-action`.
+- On a **pull request**: runs Pint in fix mode and automatically commits formatting fixes via `stefanzweifel/git-auto-commit-action`. With `fix: false`, it only checks. A commit pushed with `GITHUB_TOKEN` starts no workflow, so on a branch with required checks the fixed head never gets them; pull requests that merge on their own (a delivery agent's, with auto-merge) pass `fix: false`.
 - On a **push**: runs Pint in check mode (`--test`) and fails if formatting is not compliant.
 
 ### PHPUnit

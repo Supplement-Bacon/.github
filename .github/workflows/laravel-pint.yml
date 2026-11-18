@@ -15,6 +15,14 @@ on:
         required: false
         type: string
         default: ""
+      fix:
+        description: >-
+          On pull requests, fix the formatting and commit it (true) or only check it (false).
+          A commit pushed with GITHUB_TOKEN starts no workflow, so with required checks the fixed
+          head never gets them: pass false for pull requests that must merge on their own.
+        required: false
+        type: boolean
+        default: true
 
 permissions:
   contents: write
@@ -38,15 +46,15 @@ jobs:
           extra_repositories: ${{ inputs.extra_repositories }}
 
       - name: Run Laravel Pint (fix)
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && inputs.fix
         run: ./vendor/bin/pint
 
       - name: Run Laravel Pint (check only)
-        if: github.event_name != 'pull_request'
+        if: github.event_name != 'pull_request' || !inputs.fix
         run: ./vendor/bin/pint --test
 
       - name: Commit changes
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && inputs.fix
         uses: stefanzweifel/git-auto-commit-action@v7
         with:
           commit_message: "style: fix code formatting with Laravel Pint"
