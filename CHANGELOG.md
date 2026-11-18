@@ -1,5 +1,13 @@
 # Changelog
 
+## [4.5.0](https://github.com/Supplement-Bacon/.github/compare/v4.4.0...v4.5.0) (2026-11-18)
+
+
+### Features
+
+* **laravel-pint:** add a fix input to only check formatting on pull requests ([70ac871](https://github.com/Supplement-Bacon/.github/commit/70ac871b0048aad9d58d73f757003842269eb6e4))
+* **laravel-pint:** add a fix input to only check formatting on pull requests ([f853c30](https://github.com/Supplement-Bacon/.github/commit/f853c30264ce1387b4f477ddb7ca9cbe175aeaf8))
+
 ## [4.4.0](https://github.com/Supplement-Bacon/.github/compare/v4.3.0...v4.4.0) (2026-11-17)
 
 
