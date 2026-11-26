@@ -40,6 +40,11 @@ on:
         required: false
         type: string
         default: ""
+      runner:
+        required: false
+        type: string
+        default: "ubuntu-latest"
+        description: "Runner label of the test job, e.g. an organization larger runner (more cores make --parallel worth it)"
 
 permissions:
   contents: read
@@ -48,7 +53,7 @@ permissions:
 jobs:
   phpunit:
     if: inputs.run-example-tests != true
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runner }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
