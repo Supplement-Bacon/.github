@@ -1,5 +1,13 @@
 # Changelog
 
+## [4.6.0](https://github.com/Supplement-Bacon/.github/compare/v4.5.0...v4.6.0) (2026-11-26)
+
+
+### Features
+
+* **phpunit:** add a runner input to choose the test job's runner ([57bb452](https://github.com/Supplement-Bacon/.github/commit/57bb452721a40ae6f10d043fb0f39763bff8f980))
+* **phpunit:** add a runner input to choose the test job's runner ([8a38f5f](https://github.com/Supplement-Bacon/.github/commit/8a38f5f65bb6cc127d13436c72d91339b19533a8))
+
 ## [4.5.0](https://github.com/Supplement-Bacon/.github/compare/v4.4.0...v4.5.0) (2026-11-18)
 
 
